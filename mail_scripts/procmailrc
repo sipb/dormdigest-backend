@@ -1,0 +1,16 @@
+# set working directories
+LOGFILE=$HOME/mail_scripts/log
+MAILDIR=$HOME/mail_scripts
+
+# process email
+# and forward for testing/record-keeping
+:0
+*
+{
+   :0
+   | /usr/bin/python3 "${HOME}/mail_scripts/send_to_backend.py"
+
+   :0
+   ! sipb-dormdigest-debug@mit.edu
+}
+
