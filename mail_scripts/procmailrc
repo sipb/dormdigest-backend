@@ -7,10 +7,10 @@ MAILDIR=$HOME/mail_scripts
 :0
 *
 {
-   :0
-   | /usr/bin/python3 "${HOME}/mail_scripts/send_to_backend.py"
+   :0 c
+   ! sipb-dormdigest-debug@mit.edu
 
    :0
-   ! sipb-dormdigest-debug@mit.edu
+   | /usr/bin/python3 "${HOME}/mail_scripts/send_to_backend.py"
 }
 
