@@ -1,0 +1,8 @@
+#Python virtual environment
+env/
+
+#Secrets
+src/creds.py
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
