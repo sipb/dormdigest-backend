@@ -14,12 +14,13 @@ Relevant permission bits
 
 ## Development Best Practices
 
-* When working in your local code environment, it's recommended to work off a virtual environment (to ensure there's no compatibility issues with the SQLalchemy + dependencies versions). 
-* To do so, on your first time run:
-  * `python3 -m venv env` (Creates a local environment in current folder)
-  * `source env/bin/activate` (Activates virtual environment)
-  * `pip3 install -r requirements.txt` (Install necessary packages)
-* When you exit your workspace, remember to run: 
-  * `deactivate`
-* Then, in the future, when you come back, simply do:
-  * `source env/bin/activate`
+* **Python Virtual Environment** 
+  * When working in your local code environment, it's recommended to work off a virtual environment (to ensure there's no compatibility issues with the SQLalchemy + dependencies versions). 
+  * To do so, on your first time run:
+    * `python3 -m venv env` (Creates a local environment in current folder)
+    * `source env/bin/activate` (Activates virtual environment)
+    * `pip3 install -r requirements.txt` (Install necessary packages)
+  * When you exit your workspace, remember to run: 
+    * `deactivate`
+  * Then, in the future, when you come back, simply do:
+    * `source env/bin/activate`
