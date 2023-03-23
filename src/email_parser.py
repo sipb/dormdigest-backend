@@ -6,7 +6,8 @@ from typing import Optional
 from dataclasses import dataclass
 
 # pattern that determines if it's a dormspam or not
-DORMSPAM_PATTERN = r"\bbcc'?e?d\s+to\s+(all\s+)?dorms[;,]?\s+(\w+)\s+for bc-talk\b"
+DORMSPAM_PATTERN = r"\bbcc'?e?d\s+to\s+(all\s+)?dorms[;,.]?\s+(\w+)\s+for bc-talk\b"
+DORMSPAM_PATTERN_COLOR_GROUP = 2
 
 # supported email content types
 CONTENT_TYPES = (
@@ -49,7 +50,13 @@ class Email:
 
     @property
     def dormspam(self) -> bool:
-        ...
+        return bool(self.color)
+
+    @property
+    def color(self) -> Optional[str]:
+        search = re.search(DORMSPAM_PATTERN, self.plaintext, flags=re.IGNORECASE)
+        if search: return search.group(DORMSPAM_PATTERN_COLOR_GROUP)
+        return None
 
 def html2text(html) -> str:
     """Convert html to plaintext
@@ -126,3 +133,6 @@ if __name__ == "__main__":
     print("Parsed the email:")
     for k, v in parsed_email.__dict__.items():
         print(f"   {k!r} -> {v!r}")
+    
+    print(f"   'color' -> {parsed_email.color!r}")
+    print(f"   'dormspam' -> {parsed_email.dormspam!r}")
