@@ -7,19 +7,6 @@ from schema import \
 # Database Operations
 ##############################################################
 
-# General Purpose Functions
-def db_add(obj):
-    """
-    Add an object defined by the Schema to the database
-    and commits the change
-
-    Parameters
-    ----------
-    x : SQLBase
-        The row object to add.
-    """
-    session.add(obj)
-    session.commit()
 
 ## Get Functions
 
