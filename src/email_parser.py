@@ -2,6 +2,8 @@ import sys
 import datetime
 import re
 
+from time_parser import parse_event_time, EventTime
+
 from typing import Optional
 from dataclasses import dataclass
 
@@ -57,6 +59,10 @@ class Email:
         search = re.search(DORMSPAM_PATTERN, self.plaintext, flags=re.IGNORECASE)
         if search: return search.group(DORMSPAM_PATTERN_COLOR_GROUP)
         return None
+
+    @property
+    def when(self) -> EventTime:
+        return parse_event_time(self.plaintext, today=self.sent.date())
 
 def html2text(html) -> str:
     """Convert html to plaintext
@@ -136,3 +142,4 @@ if __name__ == "__main__":
     
     print(f"   'color' -> {parsed_email.color!r}")
     print(f"   'dormspam' -> {parsed_email.dormspam!r}")
+    print(f"   'when' -> {parsed_email.when!r}")
