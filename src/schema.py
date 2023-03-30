@@ -54,7 +54,7 @@ class Event(SQLBase):
                 unique=True, autoincrement=True)
 
     # User that submitted the event (can be only one!)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id"),nullable=False)
     user = relationship("User")
     
     # Event characteristics
@@ -67,7 +67,7 @@ class Event(SQLBase):
     description_html = deferred(Column(Text, default=""))
 
     cta_link = Column(String(EVENT_LINK_LENGTH))
-    time_start = Column(DateTime)
+    time_start = Column(DateTime,nullable=False)
     time_end = Column(DateTime)
 
     # Published and approved?
@@ -79,8 +79,8 @@ class Event(SQLBase):
     date_created = Column(DateTime, default=datetime.datetime.now)
     date_updated = Column(DateTime, default=datetime.datetime.now)
 
-    def __init__(self, user=None):
-        self.user = user
+    def __init__(self, user_id):
+        self.user_id = user_id
         self.generateUniques()
 
     def generateUniques(self):
@@ -109,7 +109,7 @@ class Event(SQLBase):
         return {
             'title': self.title,
             'start': self.time_start.isoformat() + "Z",
-            'end': self.time_end.isoformat() + "Z",
+            'end': (self.time_end.isoformat() + "Z") if self.time_end else None,
             'location': self.location,
             'link': self.cta_link,
             'approved': self.approved_is,
@@ -122,7 +122,7 @@ class Event(SQLBase):
             "name": self.title,
             "location": self.location,
             "start_time": self.time_start.isoformat() + "Z",
-            "end_time": self.time_end.isoformat() + "Z",
+            "end_time": (self.time_end.isoformat() + "Z") if self.time_end else None,
             "description": self.description_html if self.description_html else self.description,
             "description_text": self.description,
         }
@@ -169,6 +169,10 @@ class EventTags(SQLBase): #Map event to tags it is associated with
         unique=True, autoincrement=True)
     event_id = Column(Integer, ForeignKey("events.id"),nullable=False)
     event_tag = Column(Integer, default=0)
+    
+    def __init__(self, event_id, event_tag):
+        self.event_id = event_id
+        self.event_tag = event_tag
 
 class EventEmail(SQLBase): #Map event email to parsed Event entry
     __tablename__ = "event_emails"
