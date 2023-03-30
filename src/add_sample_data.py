@@ -16,13 +16,22 @@ now = datetime.now()
 later = now + timedelta(weeks=4)
 
 event_and_clubs = [
-    ("VSA Potluck","Vietnamese Student Association","Come eat food"),
-    ("Machine Room Tour","Student Information Processing Board","Watch how servers run, wohoo!")
+    ("Vietnamese Student Association","VSA Potluck","Come eat food"),
+    ("SIPB","Machine Room Tour","Watch how servers run, wohoo!")
 ]
 start_dates = [
     get_random_date(now,later) for i in range(len(event_and_clubs))
 ]
 users = [
-    'sipb-ec@mit.edu',
-    'mitvsa-officers@mit.edu',
+    'abc@mit.edu',
+    'def@mit.edu',
 ]
+
+for user, start_time, event_and_club in zip(users,start_dates,event_and_clubs):
+    user_id = add_user(user)
+    club_name, event_title, description = event_and_club
+    club_id = add_club(club_name)
+    
+    assert user_id and club_id
+    event_id = add_event(event_title,user_id,description,start_time,club_id)
+    print(event_id)
