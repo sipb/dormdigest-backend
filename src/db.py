@@ -4,7 +4,7 @@ from datetime import timedelta, datetime
 
 from db_helpers import *
 from schema import \
-    session, Event, EventTags, User
+    session, Event, EventTags, User, Club
 import calendar
 
 MAX_COMMIT_RETRIES = 10
@@ -66,14 +66,47 @@ def get_events_by_month(month,year=None):
     return list_dict_convert(events)
 
 ## Add Functions
+def add_to_db(obj, others=None,rollbackfunc=None):
+    """Adds objects to database with re-trials
+    
+    Arguments:
+        obj {Model} -- Object(s) wanting to add
+    
+    Keyword Arguments:
+        others {List} -- List of other model objects (default: {None})
+        rollbackfunc {Func} -- Function that should be called on rollback (default: {None})
+    
+    Returns:
+        Boolean - Success or not successful
+    """
+    retry = 10
+    committed = False
+    while (not committed and retry > 0):
+        try:
+            session.add(obj)
+            if (others):
+                for o in others:
+                    session.add(o)
+            session.commit()
+        except exc.IntegrityError:
+            session.rollback()
+            if (rollbackfunc):
+                rollbackfunc()
+            else:
+                retry = 0
+            retry -= 1
+        else:
+            committed = True
+    return committed
+
 def add_event(title, user_id, description, time_start, club_id=None,\
               description_html=None, location=None, time_end=None, cta_link=None):
     '''
     Adds an event to the database
     
-    Returns id of new event
+    Returns id of new event, or None if add failed
     '''
-    event = Event(None)
+    event = Event()
     #Required fields
     event.title = title
     event.user_id = user_id
@@ -87,25 +120,16 @@ def add_event(title, user_id, description, time_start, club_id=None,\
     event.cta_link = cta_link
     
     retry = 10
-    committed = False
-    while (not committed and retry > 0):
-        try:
-            session.add(event)
-            session.commit()
-        except exc.IntegrityError:
-            session.rollback()
-            event.generateUniques()
-            retry -= 1
-        else:
-            committed = True
+    committed = add_to_db(event)
     if committed:
         session.flush()
         return event.id
+    return None
 
 def add_event_tags(event_id, event_tags):
     '''
     Given event_tags (list of ints representing enum Categories)
-    and an event_id, link the event to those tags only
+    and an event_id, link the event to those tags
     
     Note: Will delete existing event_tags if they exist
     '''
@@ -120,3 +144,43 @@ def add_event_tags(event_id, event_tags):
         new_tags.append(EventTags(event_id,tag))
     session.add_all(new_tags)
     session.commit()
+    
+def add_user(email,user_privilege=0):
+    '''
+    Add a new user to the database (if it doesn't exist). 
+    
+    If user already exists with that email, returns id 
+    of current user. Else, return id of new user, or None 
+    if add failed.
+    '''
+    curr_user = session.query(User).filter(User.email==email).first()
+    if curr_user:
+        return curr_user.id
+    
+    new_user = User(email,user_privilege)
+    committed = add_to_db(new_user)
+    if committed:
+        session.flush()
+        return new_user.id
+    return None
+
+def add_club(club_name,club_abbrev=None,exec_email=None):
+    '''
+    Add a new club to the database (if it doesn't exist). 
+    
+    If a club already exists with that name, returns id 
+    of current club. Else, return id of new club, or None
+    if add failed.
+    '''
+    curr_club = session.query(Club).filter(Club.name==club_name).first()
+    if curr_club:
+        return curr_club.id
+    print("No such club yet")
+    
+    new_club = Club(club_name,club_abbrev,exec_email)
+    committed = add_to_db(new_club)
+    
+    if committed:
+        session.flush()
+        return new_club.id
+    return None

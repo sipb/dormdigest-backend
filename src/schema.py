@@ -22,17 +22,16 @@ SQL_URL = "mysql+mysqlconnector://%s:%s@sql.mit.edu/%s?charset=utf8" % (
 EMAIL_LENGTH = 64
 EMAIL_MESSAGE_ID_LENGTH = 512 #Per RFC-2822 regulation
 EVENT_LINK_LENGTH = 512
-EVENT_TOKEN_LENGTH = 64
 CLUB_NAME_LENGTH = 128
 CLUB_NAME_ABBREV_LENGTH = 32
 
 class UserPrivilege(enum.Enum):
-    normal = 0 #Default
-    admin = 1
+    NORMAL = 0 #Default
+    ADMIN = 1
     
 class MemberPrivilege(enum.Enum):
-    normal = 0 #Default
-    officer = 1
+    NORMAL = 0 #Default
+    OFFICER = 1
     
 class EventType(enum.Enum):
     unknown = 0 
@@ -73,18 +72,8 @@ class Event(SQLBase):
     # Published and approved?
     approved_is = Column(Boolean, default=False)
 
-    # Unique event authstring -- NO KNOWN USAGE YET
-    token = Column(String(EVENT_TOKEN_LENGTH))
-
     date_created = Column(DateTime, default=datetime.datetime.now)
     date_updated = Column(DateTime, default=datetime.datetime.now)
-
-    def __init__(self, user_id):
-        self.user_id = user_id
-        self.generateUniques()
-
-    def generateUniques(self):
-        self.token = random_id_string(EVENT_TOKEN_LENGTH)
 
     # Client side
     # type Event = {
@@ -132,14 +121,15 @@ class User(SQLBase):
     id = Column(Integer, primary_key=True,
                 unique=True, autoincrement=True)
 
-    email = Column(String(EMAIL_LENGTH), unique=True)
+    email = Column(String(EMAIL_LENGTH), unique=True, nullable=False)
     user_privilege = Column(Integer, default=0)
 
     date_created = Column(DateTime, default=datetime.datetime.now)
     date_updated = Column(DateTime, default=datetime.datetime.now)
 
-    def __init__(self, email):
+    def __init__(self, email,user_privilege):
         self.email = email
+        self.user_privilege = user_privilege
 
     def json(self):
         return {
@@ -151,9 +141,14 @@ class Club(SQLBase):
     __tablename__ = "clubs"
     id = Column(Integer, primary_key=True,
             unique=True, autoincrement=True)
-    full_name = Column(String(128), unique=True)
-    abbrev = Column(String(CLUB_NAME_ABBREV_LENGTH), unique=True)
-    exec_email = Column(String(EMAIL_LENGTH), unique=True)
+    name = Column(String(CLUB_NAME_LENGTH), unique=True,nullable=False)
+    abbrev = Column(String(CLUB_NAME_ABBREV_LENGTH))
+    exec_email = Column(String(EMAIL_LENGTH))
+    
+    def __init__(self, name, abbrev=None, exec_email=None):
+        self.name = name
+        self.abbrev = abbrev
+        self.exec_email = exec_email        
 
 # Relationship Tables
 class ClubMembership(SQLBase): #Map user to clubs they are in
