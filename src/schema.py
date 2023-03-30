@@ -174,7 +174,7 @@ class EventEmail(SQLBase): #Map event email to parsed Event entry
     __tablename__ = "event_emails"
     message_id = Column(String(EMAIL_MESSAGE_ID_LENGTH), primary_key = True, unique=True)
     event_id = Column(Integer, ForeignKey("events.id"),nullable=False)
-    event = relationship(Event)
+    event = relationship("Event")
 
 # Implement schema
 SQLBase.metadata.create_all(sqlengine)

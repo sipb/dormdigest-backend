@@ -14,5 +14,7 @@ def get_all_events():
     '''Get information of all of events in database'''
     return session.query(Event).all()
 
+
+
 ## Add Functions
 ## TODO
