@@ -17,7 +17,7 @@ MAX_COMMIT_RETRIES = 10
 ## Get Functions
 def get_all_events():
     '''Get information of all of events in database'''
-    return session.query(Event).all()
+    return list_dict_convert(session.query(Event).all())
 
 def get_events_by_date(from_date):
     '''
@@ -36,7 +36,7 @@ def get_events_by_date(from_date):
         ).order_by(
             Event.time_start, Event.title
         ).all()
-    return events
+    return list_dict_convert(events)
 
 def get_events_by_month(month,year=None):
     '''
@@ -45,6 +45,7 @@ def get_events_by_month(month,year=None):
     
     Month: int in range [0,12] inclusive
     Year: int (if None, will interpret as current year)
+
     '''
     assert 0 <= month <= 12, "Month must be in range 1 and 12"
     if not year:
@@ -62,11 +63,16 @@ def get_events_by_month(month,year=None):
         ).order_by(
             Event.time_start, Event.title
         ).all()
-    return events
+    return list_dict_convert(events)
 
 ## Add Functions
 def add_event(title, user_id, description, time_start, club_id=None,\
               description_html=None, location=None, time_end=None, cta_link=None):
+    '''
+    Adds an event to the database
+    
+    Returns id of new event
+    '''
     event = Event(None)
     #Required fields
     event.title = title
