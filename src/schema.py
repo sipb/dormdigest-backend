@@ -65,6 +65,8 @@ class Event(SQLBase):
     description = deferred(Column(Text, default=""))
     description_html = deferred(Column(Text, default=""))
 
+    tags = relationship('EventTag', backref='Event', lazy='dynamic')
+
     cta_link = Column(String(EVENT_LINK_LENGTH))
     time_start = Column(DateTime,nullable=False)
     time_end = Column(DateTime)
@@ -158,7 +160,7 @@ class ClubMembership(SQLBase): #Map user to clubs they are in
     user_id = Column(Integer, ForeignKey("users.id"),nullable=False)    
     club_id = Column(Integer, ForeignKey("clubs.id"), nullable=False)
 
-class EventTags(SQLBase): #Map event to tags it is associated with
+class EventTag(SQLBase): #Map event to tags it is associated with
     __tablename__ = "event_tags"
     id = Column(Integer, primary_key=True,
         unique=True, autoincrement=True)
@@ -168,6 +170,9 @@ class EventTags(SQLBase): #Map event to tags it is associated with
     def __init__(self, event_id, event_tag):
         self.event_id = event_id
         self.event_tag = event_tag
+        
+    def get_tag_value(self):
+        return self.event_tag
 
 class EventEmail(SQLBase): #Map event email to parsed Event entry
     __tablename__ = "event_emails"

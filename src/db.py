@@ -4,7 +4,7 @@ from datetime import timedelta, datetime
 
 from db_helpers import *
 from schema import \
-    session, Event, EventTags, User, Club
+    session, Event, EventTag, User, Club
 import calendar
 
 MAX_COMMIT_RETRIES = 10
@@ -28,26 +28,24 @@ def get_events_by_date(from_date):
     '''
     to_date = from_date + timedelta(days=1)
     events = session.query(
-            Event, EventTags
-        ).filter(
-            Event.id == EventTags.event_id 
+            Event
         ).filter(
             Event.time_start.between(from_date, to_date)
         ).order_by(
             Event.time_start, Event.title
         ).all()
-    return list_dict_convert(events)
+    return events
 
 def get_events_by_month(month,year=None):
     '''
     Get all events happening in a given month,
     ordered by start time and event name
     
-    Month: int in range [0,12] inclusive
+    Month: int in range [1,12] inclusive
     Year: int (if None, will interpret as current year)
 
     '''
-    assert 0 <= month <= 12, "Month must be in range 1 and 12"
+    assert 1 <= month <= 12, "Month must be in range 1 and 12"
     if not year:
         year = datetime.now().year
     _, last_day_of_month = calendar.monthrange(year,month)
@@ -55,15 +53,19 @@ def get_events_by_month(month,year=None):
     from_date = datetime(year,month,1)
     to_date = datetime(year,month,last_day_of_month)
     events = session.query(
-            Event, EventTags
-        ).filter(
-            Event.id == EventTags.event_id 
+            Event
         ).filter(
             Event.time_start.between(from_date, to_date)
         ).order_by(
             Event.time_start, Event.title
         ).all()
-    return list_dict_convert(events)
+    return events
+
+def get_event_tags(event_id):
+    '''
+    Given an event_id, return list of all tags associated with it
+    '''
+    return session.query(EventTag.event_tag).filter(EventTag.event_id==event_id).all()
 
 ## Add Functions
 def add_to_db(obj, others=None,rollbackfunc=None):
@@ -79,7 +81,8 @@ def add_to_db(obj, others=None,rollbackfunc=None):
     Returns:
         Boolean - Success or not successful
     """
-    retry = 10
+    global MAX_COMMIT_RETRIES
+    retry = MAX_COMMIT_RETRIES
     committed = False
     while (not committed and retry > 0):
         try:
@@ -99,8 +102,9 @@ def add_to_db(obj, others=None,rollbackfunc=None):
             committed = True
     return committed
 
-def add_event(title, user_id, description, time_start, club_id=None,\
-              description_html=None, location=None, time_end=None, cta_link=None):
+def add_event(title, user_id, description, time_start, event_tags=[0],\
+              club_id=None, description_html=None, location=None, \
+              time_end=None, cta_link=None):
     '''
     Adds an event to the database
     
@@ -118,11 +122,11 @@ def add_event(title, user_id, description, time_start, club_id=None,\
     event.location = location
     event.time_end = time_end
     event.cta_link = cta_link
-    
-    retry = 10
+
     committed = add_to_db(event)
     if committed:
         session.flush()
+        add_event_tags(event.id,event_tags)
         return event.id
     return None
 
@@ -134,14 +138,14 @@ def add_event_tags(event_id, event_tags):
     Note: Will delete existing event_tags if they exist
     '''
     #Delete existing event_tags
-    session.query(EventTags).filter(
-            EventTags.event_id==event_id
+    session.query(EventTag).filter(
+            EventTag.event_id==event_id
         ).delete()
     
     #Create new event tags
     new_tags = []
     for tag in event_tags:
-        new_tags.append(EventTags(event_id,tag))
+        new_tags.append(EventTag(event_id,tag))
     session.add_all(new_tags)
     session.commit()
     

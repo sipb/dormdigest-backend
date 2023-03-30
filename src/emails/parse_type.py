@@ -66,7 +66,7 @@ CATEGORIES = {
         "name": "Boba",
         "id": "boba",
         "description": "Mouthwatering, scrumptious goodness",
-        "color": "#F6B957"1 << 
+        "color": "#F6B957"
     }),
     'TALKS': (8, ["discussion", "q&a", "tech talk", "recruiting", "info session", "information session"
                        "infosession", "workshop", "research"],
