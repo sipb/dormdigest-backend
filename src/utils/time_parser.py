@@ -1,81 +1,18 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import (
-    Callable, Tuple, List, Dict, Any,
-    Optional, Union, Final, Generic, TypeVar,
-)
+from typing import Tuple, Dict, Optional, Union, Final, Generic, TypeVar
 A = TypeVar("A")
 B = TypeVar("B")
 
-import re
 import datetime
 
-@dataclass
-class Parser(Generic[A]):
-    """Represents a regex parser to extract info from text
-
-    The assembled ``Parser[NamedTuple]`` object can be called on a string
-    (``text``) to attempt the parsing. If successful, it returns the parsed
-    data as the ``NamedTuple`` type. Otherwise returns `None`.
-
-    Attributes:
-        output: The type of the parsed output, if successful.
-        pattern: The regex pattern to search for. The respective regex named
-            groups correspond exactly to the ``NamedTuple`` fields.
-        subparsers: The respective functions or parsers to call on for the
-            extracted group text.
-        tweak: Any additional finishing touches to perform on the returned
-            info.
-    """
-    output: type
-    pattern: str
-    subparsers: List[Union[Parser, Callable[[str], Any]]]
-    tweak: Callable[[A], Optional[A]] = lambda parsed: parsed
-
-    def __post_init__(self) -> None:
-        if hasattr(self.output, "__annotations__"):
-            self.annotations = self.output.__annotations__
-        else:
-            self.annotations = self.output.__origin__.__annotations__
-        assert self.annotations, \
-            f"original output type {self.output!r} must have type annotations"
-
-    def __call__(self, text: str) -> Optional[A]:
-        for match in re.finditer(self.pattern, text, flags=re.IGNORECASE):
-            groups = match.groupdict()
-            kwargs = {}
-            successfully_parsed = True
-            for i, name in enumerate(self.annotations):
-                value = self.subparsers[i](groups[name])
-                if value is None:
-                    successfully_parsed = False
-                    break
-                kwargs[name] = value
-            if not successfully_parsed: continue
-
-            parsed = self.output(**kwargs)
-            parsed = self.tweak(parsed)
-            if parsed is not None:
-                return parsed
-
-        return None
-
-    def __str__(self):
-        return self.pattern
-
-@dataclass
-class ParserChain(Generic[A, B]):
-    parsers: List[Parser]
-    formatter: Callable[[A], B]
-
-    def __call__(self, text: str, **kwargs) -> Optional[B]:
-        for parser in self.parsers:
-            parsed = parser(text)
-            if parsed is not None:
-                return self.formatter(parsed, **kwargs)
-        return None
+from parser import Parser, ParserChain
 
 TODAY = datetime.date.today()
+
+#
+# Date parsers
+#
 
 # non-numerical names for months or hours
 MONTHS: Final[Dict[str, int]] = {
@@ -111,19 +48,19 @@ Date = Union[MonthNameDay, MonthDay]
 
 _parser_month_name_day = Parser[MonthNameDay](
     MonthNameDay,
-    r"(?P<month_name>\w+)\s+(?P<day>\d{1,2})",
+    r"\b(?P<month_name>\w+)\s+(?P<day>\d{1,2})\b",
     [str, int],
     lambda parsed: parsed if parsed.month_name.capitalize() in MONTHS else None,
 )
 _parser_day_month_name = Parser[MonthNameDay](
     MonthNameDay,
-    r"(?P<day>\d{1,2})\s+(?P<month_name>\w+)",
+    r"\b(?P<day>\d{1,2})\s+(?P<month_name>\w+)\b",
     [str, int],
     lambda parsed: parsed if parsed.month_name.capitalize() in MONTHS else None,
 )
 _parser_month_day = Parser[MonthDay](
     MonthDay,
-    r"(?P<month>\d{1,2})\/(?P<day>\d{1,2})",
+    r"\b(?P<month>\d{1,2})\/(?P<day>\d{1,2})\b",
     [int, int],
 )
 
@@ -156,6 +93,9 @@ DATE_PARSER_CHAIN = ParserChain[Date, datetime.date](
     format_date,
 )
 
+#
+# Time and time range parsers
+#
 
 @dataclass
 class HourOnly:
@@ -303,6 +243,8 @@ TIME_RANGE_PARSER_CHAIN = ParserChain[TimeRange, Tuple[datetime.time, datetime.t
 
 @dataclass
 class EventTime:
+    """Represents a dormspam event start & end time
+    """
     start_date: Optional[datetime.date]
     start_time: Optional[datetime.time]
     end_date: Optional[datetime.date]
@@ -316,10 +258,10 @@ def parse_event_time(text: str, *, today: datetime.date=TODAY) -> EventTime:
     Args:
         text: The body of text to search for event times.
     """
-    # dates
+    # search for event date
     date = DATE_PARSER_CHAIN(text, today=today)
 
-    # times
+    # search for event times
     time_range = TIME_RANGE_PARSER_CHAIN(text)
     if time_range is None:
         start_time = TIME_PARSER_CHAIN(text)

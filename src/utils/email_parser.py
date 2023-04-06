@@ -3,8 +3,9 @@ import datetime
 import re
 
 from time_parser import parse_event_time, EventTime
+from location_parser import parse_locations
 
-from typing import Optional
+from typing import Optional, Set
 from dataclasses import dataclass
 
 # pattern that determines if it's a dormspam or not
@@ -63,6 +64,10 @@ class Email:
     @property
     def when(self) -> EventTime:
         return parse_event_time(self.plaintext, today=self.sent.date())
+
+    @property
+    def locations(self) -> Set[str]:
+        return parse_locations(self.plaintext)
 
 def html2text(html) -> str:
     """Convert html to plaintext
@@ -143,3 +148,4 @@ if __name__ == "__main__":
     print(f"   'color' -> {parsed_email.color!r}")
     print(f"   'dormspam' -> {parsed_email.dormspam!r}")
     print(f"   'when' -> {parsed_email.when!r}")
+    print(f"   'locations' -> {parsed_email.locations!r}")

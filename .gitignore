@@ -1,6 +1,7 @@
 # Python virtual environments
 env/
 venv*/
+pyrightconfig.json
 
 # Secrets
 src/creds.py
