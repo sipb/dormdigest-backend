@@ -1,7 +1,7 @@
 #SQLAlchemy
 import sqlalchemy as db
 import sqlalchemy.ext.declarative
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Text, Enum
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Text, Date, Time, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import deferred
 
@@ -68,8 +68,10 @@ class Event(SQLBase):
     tags = relationship('EventTag', backref='Event', lazy='dynamic')
 
     cta_link = Column(String(EVENT_LINK_LENGTH))
-    time_start = Column(DateTime,nullable=False)
-    time_end = Column(DateTime)
+    start_date = Column(Date)
+    end_date = Column(Date)
+    start_time = Column(Time)
+    end_time= Column(Time)
 
     # Published and approved?
     approved_is = Column(Boolean, default=False)
@@ -77,14 +79,15 @@ class Event(SQLBase):
     date_created = Column(DateTime, default=datetime.datetime.now)
     date_updated = Column(DateTime, default=datetime.datetime.now)
 
-    # Client side
-    # type Event = {
-    #   start: Date;
-    #   end: Date;
-    #   title: string;
-    #   type: number;
-    #   desc: string;
-    # };
+    def get_time_and_date(self):
+        datetime_json = {            
+            'start_date': (self.start_date.isoformat()) if self.start_date else None,
+            'end_date': (self.end_date.isoformat()) if self.end_date else None,
+            'start_time': (self.start_time.isoformat()+"Z") if self.start_time else None,
+            'end_time': (self.end_time.isoformat()+"Z") if self.end_time else None,
+        }
+        return datetime_json
+
     def json(self, fullJSON=2):
         additionalJSON = {}
         if (fullJSON == 2):
@@ -99,12 +102,11 @@ class Event(SQLBase):
 
         return {
             'title': self.title,
-            'start': self.time_start.isoformat() + "Z",
-            'end': (self.time_end.isoformat() + "Z") if self.time_end else None,
             'location': self.location,
             'link': self.cta_link,
             'approved': self.approved_is,
             'id': self.id,
+            **(self.get_time_and_date())
             **additionalJSON
         }
 
@@ -112,10 +114,9 @@ class Event(SQLBase):
         return {
             "name": self.title,
             "location": self.location,
-            "start_time": self.time_start.isoformat() + "Z",
-            "end_time": (self.time_end.isoformat() + "Z") if self.time_end else None,
             "description": self.description_html if self.description_html else self.description,
             "description_text": self.description,
+            **(self.get_time_and_date())
         }
 
 class User(SQLBase):
@@ -150,15 +151,21 @@ class Club(SQLBase):
     def __init__(self, name, abbrev=None, exec_email=None):
         self.name = name
         self.abbrev = abbrev
-        self.exec_email = exec_email        
+        self.exec_email = exec_email
 
 # Relationship Tables
 class ClubMembership(SQLBase): #Map user to clubs they are in
     __tablename__ = "club_memberships"
     id = Column(Integer, primary_key=True,
             unique=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id"),nullable=False)    
+    user_id = Column(Integer, ForeignKey("users.id"),nullable=False)
     club_id = Column(Integer, ForeignKey("clubs.id"), nullable=False)
+    member_privilege = Column(Integer, default=0)
+    
+    def __init__(self, user_id, club_id, member_privilege=0):
+        self.user_id = user_id
+        self.club_id = club_id
+        self.member_privilege = member_privilege
 
 class EventTag(SQLBase): #Map event to tags it is associated with
     __tablename__ = "event_tags"
