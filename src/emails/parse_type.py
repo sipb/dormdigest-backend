@@ -13,14 +13,14 @@ import re
 #   EECS = 1 << 9,
 # }
 CATEGORIES = {
-    'OTHER': (1, [],
+    'OTHER': (0, [],
              {
         "name": "Other",
         "id": "other",
         "description": "Anything else",
         "color": "#888888"
     }),
-    'FOOD': (1 << 2, ["cookie", "food", "eat", "study break", "boba", "bubble tea", "chicken", "bonchon", "bon chon", "bertucci",
+    'FOOD': (1, ["cookie", "food", "eat", "study break", "boba", "bubble tea", "chicken", "bonchon", "bon chon", "bertucci",
                       "pizza", "sandwich", "leftover", "salad", "burrito", "dinner provided", "lunch provided", "breakfast provided",
                       "dinner included", "lunch included", "ramen", "kbbq", "dumplings", "waffles", "csc",
                       "aaa", "ats", "dim sum", "drink"],
@@ -30,28 +30,28 @@ CATEGORIES = {
         "description": "Breakfast, lunch, and dinner served",
         "color": "#EE6F6F"
     }),
-    'CAREER': (1 << 3, ["career", "summer plans", "internship", "xfair", "recruiting"],
+    'CAREER': (2, ["career", "summer plans", "internship", "xfair", "recruiting"],
                {
         "name": "Career",
         "id": "career",
         "description": "Career and Recruiting events held by companies on campus",
         "color": "#459AF6"
     }),
-    'FUNDRAISING': (1 << 4, ["donate", "donated", "donation"],
+    'FUNDRAISING': (4, ["donate", "donated", "donation"],
                     {
         "name": "Fundraising",
         "id": "fundraising",
         "description": "If you're looking to help a cause this is the way to go",
         "color": "#A16EE5"
     }),
-    'APPLICATION': (1 << 5, [(2, ["apply", "application", "join"]), "deadline", "sign up", "audition", "application"],
+    'APPLICATION': (5, [(2, ["apply", "application", "join"]), "deadline", "sign up", "audition", "application"],
                     {
         "name": "Applications",
         "id": "applications",
         "description": "Trying to join something or apply for anything?",
         "color": "#459AF6"
     }),
-    'PERFORMANCE': (1 << 6, ["orchestra", "shakespeare", "theatre", "theater", "tryout",
+    'PERFORMANCE': (6, ["orchestra", "shakespeare", "theatre", "theater", "tryout",
                              "audition", "muses", "serenade", "syncopasian", "ohms", "logarhythms", "chorallaries",
                              "symphony", "choir", "concert", "ensemble", "jazz", "resonance", "a capella", "toons",
                              "sing", "centrifugues", "dancetroupe", "adt", "asian dance team", "mocha moves",
@@ -62,13 +62,13 @@ CATEGORIES = {
         "description": "Dance, music, a capella, and other concerts and performances",
         "color": "#12DAA4"
     }),
-    'BOBA': (1 << 7, ["boba", "bubble tea", "kung fu tea", "kft", "teado", "tea do"], {
+    'BOBA': (7, ["boba", "bubble tea", "kung fu tea", "kft", "teado", "tea do"], {
         "name": "Boba",
         "id": "boba",
         "description": "Mouthwatering, scrumptious goodness",
         "color": "#F6B957"
     }),
-    'TALKS': (1 << 8, ["discussion", "q&a", "tech talk", "recruiting", "info session", "information session"
+    'TALKS': (8, ["discussion", "q&a", "tech talk", "recruiting", "info session", "information session"
                        "infosession", "workshop", "research"],
               {
         "name": "Talks",
@@ -76,14 +76,14 @@ CATEGORIES = {
         "description": "Talks and short classes about anything you can imagine!",
         "color": "#73F23A"
     }),
-    'EECS-jobs-announce': (1 << 9, ["eecs-jobs-announce"],
+    'EECS-jobs-announce': (9, ["eecs-jobs-announce"],
                            {
         "name": "EECS-jobs-announce",
         "id": "eecs",
         "description": "All events from the EECS-jobs-announce mailing list",
         "color": "#5A56EF"
     }),
-    'SOCIAL': (1 << 10, ['party', 'karaoke'],
+    'SOCIAL': (10, ['party', 'karaoke'],
                {
         "name": "Social",
         "id": "social",
