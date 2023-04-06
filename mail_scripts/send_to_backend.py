@@ -8,7 +8,7 @@ import requests
 
 ENDPOINT = f""
 
-def save_last_email(email, append=false):
+def save_last_email(email, append=False):
   mode = "a" if append else "w"
   with open("last.txt", mode) as f:
     f.write(email)

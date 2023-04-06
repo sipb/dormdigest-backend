@@ -1,7 +1,9 @@
-#Python virtual environment
+# Python virtual environments
 env/
+venv*/
+pyrightconfig.json
 
-#Secrets
+# Secrets
 src/creds.py
 
 # Byte-compiled / optimized / DLL files
