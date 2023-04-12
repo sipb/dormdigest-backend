@@ -1,16 +1,13 @@
+import datetime
+import configs.creds as creds
+import enum
+
 #SQLAlchemy
 import sqlalchemy as db
 import sqlalchemy.ext.declarative
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Text, Date, Time, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import deferred
-
-#Unique ID generation
-from auth import random_id_string, random_number_string
-
-import datetime
-import creds
-import enum
 
 DATABASE_NAME = creds.database_name
 SQL_URL = "mysql+mysqlconnector://%s:%s@sql.mit.edu/%s?charset=utf8" % (

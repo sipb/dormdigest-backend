@@ -216,4 +216,4 @@ def add_club_member(club_id,user_id,member_privilege=0):
         return
     
     new_membership = ClubMembership(user_id,club_id,member_privilege)
-    committed = add_to_db(new_membership)
+    add_to_db(new_membership)

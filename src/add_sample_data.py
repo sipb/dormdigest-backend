@@ -3,7 +3,6 @@ from random import randrange,randint
 from datetime import timedelta
 from schema import MemberPrivilege
 from emails.parse_type import CATEGORIES
-import pprint
 
 def get_random_datetime(start, end):
     """
@@ -39,9 +38,9 @@ for user, start_datetime, event_and_club, tag_lst in zip(users,start_date_and_ti
     
     assert user_id and club_id
     add_club_member(club_id,user_id,MemberPrivilege.OFFICER.value)
-    event_id = add_event(event_title,user_id,description,event_tags=tag_lst,club_id=club_id,
-                         start_date=start_datetime.date(),
-                         start_time=start_datetime.time())
+    #event_id = add_event(event_title,user_id,description,event_tags=tag_lst,club_id=club_id,
+    #                     start_date=start_datetime.date(),
+    #                     start_time=start_datetime.time())
     
     #print(event_id)
 
