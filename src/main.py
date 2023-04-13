@@ -3,6 +3,8 @@ import uvicorn
 import db
 from pydantic import BaseModel, ValidationError, validator
 from datetime import date
+import configs.server_configs as config
+
 ## Request Models
 class GetEventsByMonth(BaseModel):
     month: int
@@ -40,8 +42,8 @@ async def get_events_by_date(req: GetEventsByDate):
 if __name__ == '__main__':
     uvicorn.run("main:app",
                 host="localhost",
-                port=8432,
+                port=config.SERVER_PORT,
                 reload=True,
-                ssl_keyfile="./src/configs/key.pem",
-                ssl_certfile="./src/configs/cert.pem"
+                ssl_keyfile=config.SSL_KEY_FILE,
+                ssl_certfile=config.SSL_CRT_FILE
                 )
