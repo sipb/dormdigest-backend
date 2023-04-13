@@ -58,3 +58,13 @@ for event in month_res:
     #Outputs: [5, 7, 9]
     
 print(get_event_tags(month_res))
+
+## Test has_edit_permissions
+## Note: These tests were done with an manually altered version of the above data
+
+# Case 1: User is admin
+print(has_edit_permission(2,1)) #Expect True
+print(has_edit_permission(2,2)) #Expect True
+# Case 2: User is officer for one club only (and not submitter for any event)
+print(has_edit_permission(1,1)) #Expect False
+print(has_edit_permission(1,2)) #Expect True

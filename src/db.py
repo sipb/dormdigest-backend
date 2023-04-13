@@ -5,6 +5,7 @@ from datetime import timedelta, datetime
 from db_helpers import *
 from schema import \
     session, Event, EventTag, User, Club, ClubMembership
+import schema
 import calendar
 
 MAX_COMMIT_RETRIES = 10
@@ -12,6 +13,39 @@ MAX_COMMIT_RETRIES = 10
 ##############################################################
 # Database Operations
 ##############################################################
+
+## Permission Checking
+def has_edit_permission(user_id, event_id):
+    '''
+    Check whether a user has permissions to edit/update an event
+        
+    '''
+    #Get information about user
+    user = session.query(User).filter(User.id==user_id).first()
+    if not user:
+        return False #No such user exists in db
+    
+    #Check if user is server admin (has permissions to edit all events)
+    user_privilege = user.user_privilege
+    if user_privilege == schema.UserPrivilege.ADMIN.value: 
+        return True
+    
+    #Check if user is either submitter or
+    #is an officer of the club that runs the event
+    event = session.query(Event).filter(Event.id==event_id).first()
+    if not event:
+        return False #No such event
+    if event.user_id == user_id:
+        return True #User is person who submitted the event
+    if not event.club_id:
+        return False #Not submitter and event has no club associated with it
+    
+    is_officer = session.query(ClubMembership).filter(
+            ClubMembership.user_id == user_id,
+            ClubMembership.club_id == event.club_id,
+            ClubMembership.member_privilege == schema.MemberPrivilege.OFFICER.value
+        ).first() is not None
+    return is_officer
 
 
 ## Get Functions
@@ -217,6 +251,8 @@ def add_club_member(club_id,user_id,member_privilege=0):
     
     new_membership = ClubMembership(user_id,club_id,member_privilege)
     add_to_db(new_membership)
+
+## Update functions
 
 def update_event(event_id, title, description, event_tags=None,\
                 start_date=None, end_date=None, start_time=None, end_time=None, \
