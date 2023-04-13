@@ -202,7 +202,7 @@ def add_club_member(club_id,user_id,member_privilege=0):
     Requires user_id and club_id to be valid User and Club ID.
     
     If User `user_id` is already part of Club `club_id`,
-    update `member_privilege` to be highest of current and new.w
+    update `member_privilege` to be highest between current and new.
     '''
     curr_membership = session.query(ClubMembership).filter(
                         ClubMembership.club_id==club_id,
@@ -217,3 +217,50 @@ def add_club_member(club_id,user_id,member_privilege=0):
     
     new_membership = ClubMembership(user_id,club_id,member_privilege)
     add_to_db(new_membership)
+
+def update_event(event_id, title, description, event_tags=None,\
+                start_date=None, end_date=None, start_time=None, end_time=None, \
+                description_html=None, club_id=None, location=None, cta_link=None):
+    '''
+    Update an existing event with id `event_id` in the database
+    
+    Disallowed fields:
+    - user_id, club_id
+        - These fields should be updated separately with admin privileges
+    
+    Fields different add_event:
+    - event_tags
+        - Value of None indicates event_tags should not be updated
+    
+    Returns whether update was successful
+    '''
+    event = session.query(Event).filter(Event.id==event_id).first()
+    if not event: 
+        return False #Event doesn't exist
+    
+    error=False
+    # Attempt to make corresponding updates
+    try: 
+        #Required fields
+        event.title = title
+        event.description = description
+        #Optional Fields
+        event.description_html = description_html
+        event.location = location
+        event.start_date = start_date
+        event.end_date = end_date
+        event.start_time = start_time
+        event.end_time = end_time
+        event.cta_link = cta_link
+    except:
+        session.rollback()
+        error=True
+    else:
+        session.commit()
+
+    #Update event tags if necessary
+    if event_tags:
+        add_event_tags(event_id, event_tags)
+    
+    return not error
+    

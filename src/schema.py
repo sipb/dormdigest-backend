@@ -166,8 +166,7 @@ class ClubMembership(SQLBase): #Map user to clubs they are in
 
 class EventTag(SQLBase): #Map event to tags it is associated with
     __tablename__ = "event_tags"
-    id = Column(Integer, primary_key=True,
-        unique=True, autoincrement=True)
+    id = Column(Integer, primary_key=True,unique=True, autoincrement=True)
     event_id = Column(Integer, ForeignKey("events.id"),nullable=False)
     event_tag = Column(Integer, default=0)
     

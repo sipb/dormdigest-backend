@@ -38,11 +38,17 @@ for user, start_datetime, event_and_club, tag_lst in zip(users,start_date_and_ti
     
     assert user_id and club_id
     add_club_member(club_id,user_id,MemberPrivilege.OFFICER.value)
+    
     #event_id = add_event(event_title,user_id,description,event_tags=tag_lst,club_id=club_id,
     #                     start_date=start_datetime.date(),
     #                     start_time=start_datetime.time())
-    
     #print(event_id)
+    
+    #update_res = update_event(2, "Whoa", description,event_tags=[1,4,7],
+    #                      start_date=start_datetime.date(),
+    #                      start_time=start_datetime.time(),
+    #                      location="W20-557")
+    # print(update_res)
 
 month_res = get_events_by_month(4,2023)
 for event in month_res:

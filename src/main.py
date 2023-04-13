@@ -27,16 +27,20 @@ async def root():
 
 @app.post("/get_events_by_month")
 async def get_events_by_month(req: GetEventsByMonth):
-    events_lst = db.get_events_by_month(req.month,req.year)
+    events = db.get_events_by_month(req.month,req.year)
+    tags = db.get_event_tags(events)
     return {
-        'events': events_lst
+        'events': events,
+        'tags': tags
     }
     
 @app.post("/get_events_by_date")
 async def get_events_by_date(req: GetEventsByDate):
-    events_lst = db.get_events_by_date(req.from_date)
+    events = db.get_events_by_date(req.from_date)
+    tags = db.get_event_tags(events)
     return {
-        'events': events_lst
+        'events': events,
+        'tags': tags
     }
 
 if __name__ == '__main__':
