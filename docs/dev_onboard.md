@@ -8,9 +8,10 @@ Relevant permission bits
   - To manage the SQL database, go to: <https://scripts.mit.edu/mysql/>
 - Get added to this repo as a collaborator to push changes
   - For development fork this repo to your profile. Commit changes, and then make a pull request to synchronize your fork with the main (or relevant) branch
-- Get the `creds.py` file from a current maintainer / project member and put it in the src/ folder.
+- Get the `creds.py` file from a current maintainer / project member and put it in the configs/ folder.
   - This file has the credentials for the MySQL database running on Scripts SQL service
   - You should look over it and select the corresponding mode (either `prod` for production db or `test` for test db)
+- Get the official certificates for the web service and also put them in the configs/ folder
 
 ## Development Best Practices
 

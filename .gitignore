@@ -4,7 +4,8 @@ venv*/
 pyrightconfig.json
 
 # Secrets
-src/creds.py
+src/configs/*
+!src/configs/__init__.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
