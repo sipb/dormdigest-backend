@@ -45,7 +45,7 @@ async def get_events_by_date(req: GetEventsByDate):
 
 if __name__ == '__main__':
     uvicorn.run("main:app",
-                host="localhost",
+                host=config.SERVER_HOST,
                 port=config.SERVER_PORT,
                 reload=True,
                 ssl_keyfile=config.SSL_KEY_FILE,
