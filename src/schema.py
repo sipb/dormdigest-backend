@@ -39,9 +39,12 @@ class EventType(enum.Enum):
 
 # Initialization Steps
 SQLBase = db.ext.declarative.declarative_base()
-sqlengine = db.create_engine(SQL_URL)
+sqlengine = db.create_engine(SQL_URL,pool_recycle=1440,pool_pre_ping=True)
 SQLBase.metadata.bind = sqlengine
 session = db.orm.sessionmaker(bind=sqlengine)()  # main object used for queries
+
+# Implement schema
+SQLBase.metadata.create_all(sqlengine)
 
 # Main primitives
 class Event(SQLBase):
@@ -182,6 +185,3 @@ class EventEmail(SQLBase): #Map event email to parsed Event entry
     message_id = Column(String(EMAIL_MESSAGE_ID_LENGTH), primary_key = True, unique=True)
     event_id = Column(Integer, ForeignKey("events.id"),nullable=False)
     event = relationship("Event")
-
-# Implement schema
-SQLBase.metadata.create_all(sqlengine)
