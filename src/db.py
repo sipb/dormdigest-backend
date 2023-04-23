@@ -61,6 +61,7 @@ def get_events_by_date(from_date):
     from_date: datetime Date object for target day
     '''
     to_date = from_date + timedelta(days=1)
+    
     events = session.query(
             Event
         ).filter(

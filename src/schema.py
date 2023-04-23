@@ -1,9 +1,11 @@
 import datetime
+
 import configs.creds as creds
 import enum
 
 #SQLAlchemy
-import sqlalchemy as db
+import sqlalchemy
+import sqlalchemy.orm
 import sqlalchemy.ext.declarative
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Text, Date, Time, Enum
 from sqlalchemy.orm import relationship
@@ -38,10 +40,11 @@ class EventType(enum.Enum):
 ##############################################################
 
 # Initialization Steps
-SQLBase = db.ext.declarative.declarative_base()
-sqlengine = db.create_engine(SQL_URL,pool_recycle=1440,pool_pre_ping=True)
+SQLBase = sqlalchemy.ext.declarative.declarative_base()
+sqlengine = sqlalchemy.create_engine(SQL_URL,pool_recycle=1200,pool_pre_ping=True)
 SQLBase.metadata.bind = sqlengine
-session = db.orm.sessionmaker(bind=sqlengine)()  # main object used for queries
+session = sqlalchemy.orm.sessionmaker(bind=sqlengine)  # main object used for queries
+session = sqlalchemy.orm.scoped_session(session) #We use scoped_session for thread safety
 
 # Implement schema
 SQLBase.metadata.create_all(sqlengine)
