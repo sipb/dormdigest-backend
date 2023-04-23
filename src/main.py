@@ -47,7 +47,7 @@ if __name__ == '__main__':
     uvicorn.run("main:app",
                 host=config.SERVER_HOST,
                 port=config.SERVER_PORT,
-                reload=True,
+                reload=False, #More optimized for production
                 ssl_keyfile=config.SSL_KEY_FILE,
                 ssl_certfile=config.SSL_CRT_FILE
                 )
