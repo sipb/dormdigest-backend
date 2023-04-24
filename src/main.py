@@ -29,6 +29,7 @@ async def root():
 async def get_events_by_month(req: GetEventsByMonth):
     events = db.get_events_by_month(req.month,req.year)
     tags = db.get_event_tags(events)
+    db.session.close()
     return {
         'events': events,
         'tags': tags
@@ -38,6 +39,7 @@ async def get_events_by_month(req: GetEventsByMonth):
 async def get_events_by_date(req: GetEventsByDate):
     events = db.get_events_by_date(req.from_date)
     tags = db.get_event_tags(events)
+    db.session.close()
     return {
         'events': events,
         'tags': tags

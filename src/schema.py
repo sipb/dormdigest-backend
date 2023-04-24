@@ -41,7 +41,7 @@ class EventType(enum.Enum):
 
 # Initialization Steps
 SQLBase = sqlalchemy.ext.declarative.declarative_base()
-sqlengine = sqlalchemy.create_engine(SQL_URL,pool_recycle=1200,pool_pre_ping=True)
+sqlengine = sqlalchemy.create_engine(SQL_URL,pool_recycle=600,pool_pre_ping=True)
 SQLBase.metadata.bind = sqlengine
 session = sqlalchemy.orm.sessionmaker(bind=sqlengine)  # main object used for queries
 session = sqlalchemy.orm.scoped_session(session) #We use scoped_session for thread safety
