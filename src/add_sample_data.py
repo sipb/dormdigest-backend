@@ -50,7 +50,7 @@ for user, start_datetime, event_and_club, tag_lst in zip(users,start_date_and_ti
     #                      location="W20-557")
     # print(update_res)
 
-month_res = get_events_by_month(4,2023)
+month_res = get_events_by_month(5,2023)
 for event in month_res:
     #Using relationships
     event_tags = [x.get_tag_value() for x in event.tags.all()]
