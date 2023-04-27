@@ -1,11 +1,14 @@
 import sys
 import datetime
 import re
+import base64
+import html.parser
 
 from time_parser import parse_event_time, EventTime
 from location_parser import parse_locations
+from category_parser import parse_categories
 
-from typing import Optional, Set
+from typing import Optional, Set, List, Tuple
 from dataclasses import dataclass
 
 # pattern that determines if it's a dormspam or not
@@ -20,6 +23,56 @@ CONTENT_TYPES = (
 
 # raised when the email could not be parsed
 class EmailMissingHeaders(Exception): pass
+
+class HTML2TextConverter(html.parser.HTMLParser):
+    """Used to convert any HTML to plaintext
+
+    Example: ::
+
+        >>> html = "<h1>Some header</h1><p>Some text</p>"
+        >>> parser = HTML2TextConverter()
+        >>> parser.feed(html)
+        >>> print(parser.get_text())
+        Some header
+        Some text
+        >>> 
+    """
+    entities = {
+        "nbsp": " ",
+        "lt": "<",
+        "gt": ">",
+        "amp": "&",
+        "quot": "\"",
+        "apos": "'",
+    }
+
+    def __init__(self) -> None:
+        html.parser.HTMLParser.__init__(self)
+        self.text_parts: List[str] = []
+
+    def handle_starttag(self, tag: str, attrs: List[Tuple[str, str]]) -> None:
+        if tag == "br":
+            self.text_parts.append("\n")
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in ("p", "div", "li", "h1", "h2", "h3", "h4", "h5", "h6"):
+            self.text_parts.append("\n")
+
+    def handle_data(self, data: str) -> None:
+        self.text_parts.append(data)
+
+    def handle_entityref(self, name: str) -> None:
+        self.text_parts.append(self.entities.get(name, ""))
+
+    def get_text(self) -> str:
+        return "".join(self.text_parts).strip()
+
+def html2text(html: str) -> str:
+    """Convert html to plaintext
+    """
+    parser = HTML2TextConverter()
+    parser.feed(html)
+    return parser.get_text()
 
 @dataclass(kw_only=True)
 class Email:
@@ -69,10 +122,9 @@ class Email:
     def locations(self) -> Set[str]:
         return parse_locations(self.plaintext)
 
-def html2text(html) -> str:
-    """Convert html to plaintext
-    """
-    ...
+    @property
+    def categories(self) -> Set[int]:
+        return parse_categories(self.plaintext)
 
 def nibble(header: str, pattern: str, raw: str, headers_not_found: Optional[list[str]]=None) -> Optional[str]:
     """Digest a single header from the email
@@ -116,12 +168,16 @@ def eat(raw) -> Email:
     content: dict[str, str] = {}
     for content_type in CONTENT_TYPES:
         match = re.search( # I'm not convinced this works for all emails
-            rf"Content-Type: {content_type};.*?charset=.*?Content-Transfer-Encoding:.*?\n\n(.*?)(?=--)",
+            rf"Content-Type: {content_type};.*?charset=.*?Content-Transfer-Encoding:(.*?)\n\n(.*?)(?=--)",
             raw,
             re.DOTALL,
         )
         if match:
-            content[content_type] = match.group(1).strip()
+            message = match.group(2).strip()
+            if match.group(1).strip() == "base64":
+                message = base64.b64decode(message).decode("utf-8")
+            
+            content[content_type] = message
 
     if not content:
         content_types = ", ".join(CONTENT_TYPES)
@@ -139,13 +195,16 @@ def eat(raw) -> Email:
     )
 
 if __name__ == "__main__":
-    raw = sys.stdin.read()
-    parsed_email = eat(raw)
-    print("Parsed the email:")
-    for k, v in parsed_email.__dict__.items():
-        print(f"   {k!r} -> {v!r}")
+    # raw = sys.stdin.read()
+    # parsed_email = eat(raw)
+    # print("Parsed the email:")
+    # for k, v in parsed_email.__dict__.items():
+    #     print(f"   {k!r} -> {v!r}")
     
-    print(f"   'color' -> {parsed_email.color!r}")
-    print(f"   'dormspam' -> {parsed_email.dormspam!r}")
-    print(f"   'when' -> {parsed_email.when!r}")
-    print(f"   'locations' -> {parsed_email.locations!r}")
+    # print(f"   'color' -> {parsed_email.color!r}")
+    # print(f"   'dormspam' -> {parsed_email.dormspam!r}")
+    # print(f"   'when' -> {parsed_email.when!r}")
+    # print(f"   'locations' -> {parsed_email.locations!r}")
+    # print(f"   'categories' -> {parsed_email.categories!r}")
+
+    pass
