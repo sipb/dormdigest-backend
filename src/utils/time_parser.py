@@ -6,7 +6,7 @@ B = TypeVar("B")
 
 import datetime
 
-from parser import Parser, ParserChain
+from .parser import Parser, ParserChain
 
 TODAY = datetime.date.today()
 
