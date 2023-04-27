@@ -2,7 +2,6 @@ from db import *
 from random import randrange,randint
 from datetime import timedelta
 from schema import MemberPrivilege
-from emails.parse_type import CATEGORIES
 
 def get_random_datetime(start, end):
     """

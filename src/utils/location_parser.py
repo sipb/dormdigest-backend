@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Set
 
-from parser import Parser, ParserChain
+from .parser import Parser, ParserChain
 
 LOCATIONS = [
    "Baker Dining", "Baker D",
