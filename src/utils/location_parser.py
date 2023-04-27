@@ -61,8 +61,8 @@ LOCATION_PARSER_CHAIN = ParserChain[BldgRoom, str](
 def parse_locations(text: str) -> Set[str]:
    """Early iteration of a location parser
 
-    Args:
-        text: The body of text to search for locations.
+   Args:
+      text: The body of text to search for locations.
    """
    locations = set(loc for loc in LOCATIONS if loc.lower() in text.lower())
    locations |= set(LOCATION_PARSER_CHAIN.iter(text))

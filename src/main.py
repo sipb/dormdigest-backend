@@ -1,9 +1,14 @@
-from fastapi import FastAPI
+from fastapi import (
+    FastAPI,
+    status, HTTPException,
+)
 import uvicorn
 import db
 from pydantic import BaseModel, ValidationError, validator
 from datetime import date
-import configs.server_configs as config
+
+from utils.email_parser import eat, EmailMissingHeaders
+import configs.server_configs as config # type: ignore
 
 ## Request Models
 class GetEventsByMonth(BaseModel):
@@ -18,6 +23,9 @@ class GetEventsByMonth(BaseModel):
         
 class GetEventsByDate(BaseModel):
     from_date: date
+
+class EmailModel(BaseModel):
+    email: str
 
 app = FastAPI()
 
@@ -44,6 +52,40 @@ async def get_events_by_date(req: GetEventsByDate):
         'events': events,
         'tags': tags
     }
+
+@app.post("/eat")
+async def digest(req: EmailModel, status_code=201):
+    try:
+        parsed = eat(req.email)
+    except EmailMissingHeaders as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+    verified = True
+
+    if verified:
+        user_id = db.add_user(parsed.sender)
+        club_id = None
+        location = None
+        for location in parsed.locations: break
+        link = None
+
+        event_id = db.add_event(
+            parsed.subject,
+            user_id,
+            parsed.plaintext,
+            parsed.categories,
+            parsed.when.start_date,
+            parsed.when.end_date,
+            parsed.when.start_time,
+            parsed.when.end_time,
+            parsed.content.get("text/html", None),
+            club_id,
+            location,
+            link,
+        )
 
 if __name__ == '__main__':
     uvicorn.run("main:app",
