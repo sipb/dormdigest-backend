@@ -4,9 +4,9 @@ import re
 import base64
 import html.parser
 
-from time_parser import parse_event_time, EventTime
-from location_parser import parse_locations
-from category_parser import parse_categories
+from .time_parser import parse_event_time, EventTime
+from .location_parser import parse_locations
+from .category_parser import parse_categories
 
 from typing import Optional, Set, List, Tuple
 from dataclasses import dataclass

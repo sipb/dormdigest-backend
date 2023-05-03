@@ -1,6 +1,6 @@
 import unittest
 from datetime import date, time
-from time_parser import parse_event_time, EventTime
+from utils.time_parser import parse_event_time, EventTime
 
 class TestTimeParser(unittest.TestCase):
 

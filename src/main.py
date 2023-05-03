@@ -2,6 +2,7 @@ from fastapi import (
     FastAPI,
     status, HTTPException,
 )
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import db
 from pydantic import BaseModel, ValidationError, validator
@@ -28,6 +29,12 @@ class EmailModel(BaseModel):
     email: str
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_headers=["*"],
+    allow_origins=["*"]
+)
 
 @app.get("/")
 async def root():
