@@ -27,6 +27,7 @@ class GetEventsByDate(BaseModel):
 
 class EmailModel(BaseModel):
     email: str
+    token: str
 
 app = FastAPI()
 
@@ -62,6 +63,13 @@ async def get_events_by_date(req: GetEventsByDate):
 
 @app.post("/eat")
 async def digest(req: EmailModel, status_code=201):
+    if req.token != config.TOKEN:
+        msg = f"unrecognized token {req.token!r}"
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=msg,
+        )
+
     try:
         parsed = eat(req.email)
     except EmailMissingHeaders as e:
@@ -70,17 +78,18 @@ async def digest(req: EmailModel, status_code=201):
             detail=str(e),
         )
 
-    verified = True
+    verified = parsed.sender.email.domain.lower() == "mit.edu" # could be improved?
+    sender_email = str(parsed.sender.email).lower()
 
     if verified:
-        user_id = db.add_user(parsed.sender)
+        user_id = db.add_user(sender_email)
         club_id = None
         location = None
         for location in parsed.locations: break
         link = None
 
         event_id = db.add_event(
-            parsed.subject,
+            parsed.thread_topic,
             user_id,
             parsed.plaintext,
             parsed.categories,

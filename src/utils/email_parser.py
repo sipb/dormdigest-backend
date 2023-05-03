@@ -1,15 +1,16 @@
+from typing import Optional, Set, List, Tuple
+from dataclasses import dataclass
+
 import sys
 import datetime
 import re
 import base64
 import html.parser
 
+from .parser import Parser, ParserChain
 from .time_parser import parse_event_time, EventTime
 from .location_parser import parse_locations
 from .category_parser import parse_categories
-
-from typing import Optional, Set, List, Tuple
-from dataclasses import dataclass
 
 # pattern that determines if it's a dormspam or not
 DORMSPAM_PATTERN = r"\bbcc'?e?d\s+to\s+(all\s+)?dorms[;,.]?\s+(\w+)\s+for bc-talk\b"
@@ -74,6 +75,49 @@ def html2text(html: str) -> str:
     parser.feed(html)
     return parser.get_text()
 
+@dataclass
+class EmailAddress:
+    username: str
+    domain: str
+    def __str__(self) -> str:
+        return f"{self.username}@{self.domain}"
+
+@dataclass
+class Contact:
+    """Email address with an optional name
+    """
+    email: EmailAddress
+    name: Optional[str] = None
+    def __str__(self) -> str:
+        email_part = f"<{self.email}>"
+        if not self.name: return email_part
+        return f"{self.name} {email_part}"
+
+_parser_email_address = Parser[EmailAddress](
+    EmailAddress,
+    r"^(?P<username>[a-zA-Z0-9._%+-]+)@(?P<domain>[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$",
+    [str, str],
+)
+_parser_full_email_address = Parser[Contact](
+    Contact,
+    r"^(?P<name>.+)\s+<(?P<email>.+)>$",
+    [_parser_email_address, str],
+)
+
+def parse_contact(text: str) -> Contact:
+    """Parses sender or recipient info
+
+    Raises:
+        EmailMissingHeaders: if text could not be parsed
+    """
+    full_email = _parser_full_email_address(text)
+    if full_email: return full_email
+    plain_email = _parser_email_address(text)
+    if plain_email: return Contact(plain_email)
+
+    msg = f"failed to parse {text!r} as email"
+    raise EmailMissingHeaders(msg)
+
 @dataclass(kw_only=True)
 class Email:
     """Represents a digested email
@@ -88,11 +132,11 @@ class Email:
         message_id: Universal ID of the email.
     """
     sent: datetime.datetime
-    sender: str
+    sender: Contact
     subject: str
     thread_topic: Optional[str]
     content: dict[str, str]
-    to: Optional[str]
+    to: Optional[Contact]
     message_id: str
 
     @property
@@ -163,6 +207,10 @@ def eat(raw) -> Email:
     assert(subject is not None)
     assert(to is not None)
 
+    # parse emails
+    sender_contact = parse_contact(sender)
+    to_contact = parse_contact(to)
+
     sent = datetime.datetime.strptime(date, "%a, %d %b %Y %H:%M:%S %z")
     
     content: dict[str, str] = {}
@@ -173,8 +221,9 @@ def eat(raw) -> Email:
             re.DOTALL,
         )
         if match:
+            encoding = match.group(1).strip()
             message = match.group(2).strip()
-            if match.group(1).strip() == "base64":
+            if encoding == "base64":
                 message = base64.b64decode(message).decode("utf-8")
             
             content[content_type] = message
@@ -186,25 +235,25 @@ def eat(raw) -> Email:
 
     return Email(
         sent=sent,
-        sender=sender,
+        sender=sender_contact,
         subject=subject,
         thread_topic=thread_topic,
         content=content,
-        to=to,
+        to=to_contact,
         message_id=message_id,
     )
 
 if __name__ == "__main__":
-    # raw = sys.stdin.read()
-    # parsed_email = eat(raw)
-    # print("Parsed the email:")
-    # for k, v in parsed_email.__dict__.items():
-    #     print(f"   {k!r} -> {v!r}")
+    raw = sys.stdin.read()
+    parsed_email = eat(raw)
+    print("Parsed the email:")
+    for k, v in parsed_email.__dict__.items():
+        print(f"   {k!r} -> {v!r}")
     
-    # print(f"   'color' -> {parsed_email.color!r}")
-    # print(f"   'dormspam' -> {parsed_email.dormspam!r}")
-    # print(f"   'when' -> {parsed_email.when!r}")
-    # print(f"   'locations' -> {parsed_email.locations!r}")
-    # print(f"   'categories' -> {parsed_email.categories!r}")
+    print(f"   'color' -> {parsed_email.color!r}")
+    print(f"   'dormspam' -> {parsed_email.dormspam!r}")
+    print(f"   'when' -> {parsed_email.when!r}")
+    print(f"   'locations' -> {parsed_email.locations!r}")
+    print(f"   'categories' -> {parsed_email.categories!r}")
 
     pass

@@ -62,12 +62,6 @@ TALKS = Category(
    "Talks, workshops, short classes.",
 )
 
-# ?
-SOCIAL = Category(
-   ["party", "karaoke"],
-   "Parties, karaoke nights, and food related outings",
-)
-
 # as they're stored in the database
 CATEGORIES = [
    OTHER,
@@ -78,7 +72,6 @@ CATEGORIES = [
    PERFORMANCE,
    BOBA,
    TALKS,
-   SOCIAL,
 ]
 
 def parse_categories(text: str) -> Set[int]:
