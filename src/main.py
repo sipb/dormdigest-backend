@@ -10,6 +10,7 @@ from datetime import date
 
 from utils.email_parser import eat, EmailMissingHeaders
 import configs.server_configs as config # type: ignore
+from configs.creds import valid_API_tokens
 
 ## Request Models
 class GetEventsByMonth(BaseModel):
@@ -63,7 +64,7 @@ async def get_events_by_date(req: GetEventsByDate):
 
 @app.post("/eat")
 async def digest(req: EmailModel, status_code=201):
-    if req.token != config.TOKEN:
+    if not req.token in valid_API_tokens:
         msg = f"unrecognized token {req.token!r}"
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
