@@ -20,7 +20,7 @@ Relevant permission bits
   * To do so, on your first time run:
     * **NOTE:** If running on XVM server, it's very likely that the default Python3 version is v3.6, whereas this project depends on v3.10. As a result, you will need to change references to `python3` to `python3.10` and `pip3` to `python3.10 -m pip`
     * `sudo apt install libmysqlclient-dev` (Installs MySQL client)
-    * `sudo apt-get install python3-dev`
+    * `sudo apt-get install python3-dev` (or `python3.10-dev`, since that's the Python version we're currently using)
     * `python3 -m venv env` (Creates a local environment in current folder)
     * `source env/bin/activate` (Activates virtual environment)
     * `pip3 install -r requirements.txt` (Install necessary packages)

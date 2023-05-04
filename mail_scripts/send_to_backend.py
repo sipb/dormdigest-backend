@@ -6,9 +6,7 @@ import sys
 import os
 import requests
 
-ENDPOINT = os.getenv("DORMDIGEST_EAT_ENDPOINT")
-WEBHOOK_URL = os.getenv("DORMDIGEST_WEBHOOK")
-TOKEN = os.getenv("DORMDIGEST_TOKEN")
+from config import ENDPOINT, WEBHOOK_URL, TOKEN
 
 def save_last_email(email, append=False):
   mode = "a" if append else "w"
