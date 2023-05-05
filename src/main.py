@@ -34,8 +34,10 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
+    allow_credentials=True,
     allow_headers=["*"],
-    allow_origins=["*"]
+    allow_methods=["*"],
+    allow_origins=["http://localhost:3000","localhost","localhost:3000","https://dormdigest.xvm.mit.edu"]
 )
 
 @app.get("/")
