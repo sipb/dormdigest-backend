@@ -26,8 +26,9 @@ def pass_to_api(email):
 
   if WEBHOOK_URL is None: return
 
+  text = "{}: {}".format(response.status_code, response.content)
   error = {
-    "text": f"{response.status_code}: {response.content}",
+    "text": text,
     "attachments": [{
       "fallback": "(email attached)",
       "text": email,
