@@ -64,8 +64,8 @@ async def get_events_by_date(req: GetEventsByDate):
         'tags': tags
     }
 
-@app.post("/eat")
-async def digest(req: EmailModel, status_code=201):
+@app.post("/eat", status_code=status.HTTP_201_CREATED)
+async def digest(req: EmailModel):
     if not req.token in valid_API_tokens:
         msg = f"unrecognized token {req.token!r}"
         raise HTTPException(

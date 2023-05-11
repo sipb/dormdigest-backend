@@ -4,14 +4,16 @@ Forward the email to backend at the correct endpoint
 
 import sys
 import os
-import requests
+import json
+from urllib import request, parse, error
 
 from config import ENDPOINT, WEBHOOK_URL, TOKEN
 
 def save_last_email(email, append=False):
   mode = "a" if append else "w"
   with open("last.txt", mode) as f:
-    f.write(email)
+    f.write(email + "\n\n")
+    f.write("---\n\n")
 
 def pass_to_api(email):
   if ENDPOINT is None or TOKEN is None:
@@ -21,21 +23,27 @@ def pass_to_api(email):
     "email": email,
     "token": TOKEN,
   }
-  response = requests.post(ENDPOINT, json=payload)
-  if response.status_code == 200: return
+  headers = {"Content-Type": "application/json"}
+  req = request.Request(ENDPOINT, data=json.dumps(payload).encode(), headers=headers, method="POST")
 
-  if WEBHOOK_URL is None: return
+  try:
+    response = request.urlopen(req)
+    if response.status in (200, 201): return
+  except error.HTTPError as e:
+    if WEBHOOK_URL is None:
+      return
 
-  text = "{}: {}".format(response.status_code, response.content)
-  error = {
-    "text": text,
-    "attachments": [{
-      "fallback": "(email attached)",
-      "text": email,
-    }]
-  }
+    text = "**{}**: {}".format(e.code, e.reason)
+    error_data = {
+      "text": text,
+      "attachments": [{
+        "fallback": "(email attached)",
+        "text": email,
+      }]
+    }
 
-  requests.post(WEBHOOK_URL, json=error)
+    req = request.Request(WEBHOOK_URL, data=json.dumps(error_data).encode(), headers=headers, method="POST")
+    request.urlopen(req)
 
 if __name__ == "__main__":
   email = sys.stdin.read()
