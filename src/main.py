@@ -8,6 +8,7 @@ import db
 from db_helpers import row2dict
 from pydantic import BaseModel, ValidationError, validator
 from datetime import date
+import traceback
 
 from utils.email_parser import eat, EmailMissingHeaders
 import configs.server_configs as config # type: ignore
@@ -80,6 +81,12 @@ async def digest(req: EmailModel):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
+        )
+    except Exception as e:
+        tb = traceback.format_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=tb,
         )
 
     verified = parsed.sender.email.domain.lower() == "mit.edu" # could be improved?
