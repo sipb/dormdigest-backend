@@ -5,6 +5,7 @@ from fastapi import (
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import db
+from db_helpers import row2dict
 from pydantic import BaseModel, ValidationError, validator
 from datetime import date
 
@@ -25,6 +26,7 @@ class GetEventsByMonth(BaseModel):
         
 class GetEventsByDate(BaseModel):
     from_date: date
+    include_description: bool | None = False
 
 class EmailModel(BaseModel):
     email: str
@@ -46,23 +48,23 @@ async def root():
 
 @app.post("/get_events_by_month")
 async def get_events_by_month(req: GetEventsByMonth):
-    events = db.get_events_by_month(req.month,req.year)
-    tags = db.get_event_tags(events)
-    db.session.close()
-    return {
-        'events': events,
-        'tags': tags
-    }
+    with db.session_scope() as session:
+        events = db.get_events_by_month(session,req.month,req.year)
+        tags = db.get_event_tags(session,events)
+        return {
+            'events': row2dict(events),
+            'tags': tags
+        }
     
 @app.post("/get_events_by_date")
 async def get_events_by_date(req: GetEventsByDate):
-    events = db.get_events_by_date(req.from_date)
-    tags = db.get_event_tags(events)
-    db.session.close()
-    return {
-        'events': events,
-        'tags': tags
-    }
+    with db.session_scope() as session:
+        events = db.get_events_by_date(session,req.from_date,req.include_description)
+        tags = db.get_event_tags(session,events)
+        return {
+            'events': row2dict(events),
+            'tags': tags
+        }
 
 @app.post("/eat", status_code=status.HTTP_201_CREATED)
 async def digest(req: EmailModel):
@@ -72,7 +74,6 @@ async def digest(req: EmailModel):
             status_code=status.HTTP_403_FORBIDDEN,
             detail=msg,
         )
-
     try:
         parsed = eat(req.email)
     except EmailMissingHeaders as e:
@@ -83,28 +84,29 @@ async def digest(req: EmailModel):
 
     verified = parsed.sender.email.domain.lower() == "mit.edu" # could be improved?
     sender_email = str(parsed.sender.email).lower()
-
     if verified:
-        user_id = db.add_user(sender_email)
-        club_id = None
-        location = None
-        for location in parsed.locations: break
-        link = None
+        with db.session_scope() as session:
+            user_id = db.add_user(session, sender_email)
+            club_id = None
+            location = None
+            for location in parsed.locations: break
+            link = None
 
-        event_id = db.add_event(
-            parsed.thread_topic,
-            user_id,
-            parsed.plaintext,
-            parsed.categories,
-            parsed.when.start_date,
-            parsed.when.end_date,
-            parsed.when.start_time,
-            parsed.when.end_time,
-            parsed.content.get("text/html", None),
-            club_id,
-            location,
-            link,
-        )
+            event_id = db.add_event(
+                session,
+                parsed.thread_topic,
+                user_id,
+                parsed.plaintext,
+                parsed.categories,
+                parsed.when.start_date,
+                parsed.when.end_date,
+                parsed.when.start_time,
+                parsed.when.end_time,
+                parsed.content.get("text/html", None),
+                club_id,
+                location,
+                link,
+            )
 
 if __name__ == '__main__':
     uvicorn.run("main:app",

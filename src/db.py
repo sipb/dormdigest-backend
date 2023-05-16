@@ -1,21 +1,42 @@
 import sqlalchemy as db
 from sqlalchemy import exc
+import sqlalchemy.orm
 from datetime import timedelta, datetime
 
+from contextlib import contextmanager
 from db_helpers import *
 from schema import \
-    session, Event, EventTag, User, Club, ClubMembership
+    Event, EventTag, User, Club, ClubMembership, sqlengine
 import schema
 import calendar
 
 MAX_COMMIT_RETRIES = 10
+
+# Set up SQLachemy sesion factory
+session_factory = sqlalchemy.orm.sessionmaker(bind=sqlengine)  # main object used for queries
+Session = sqlalchemy.orm.scoped_session(session_factory) #We use scoped_session for thread safety
+
+@contextmanager
+def session_scope():
+    """Provide a transactional scope around a series of operations."""
+    session = Session()
+    try:
+        yield session
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
 
 ##############################################################
 # Database Operations
 ##############################################################
 
 ## Permission Checking
-def has_edit_permission(user_id, event_id):
+def has_edit_permission(session, user_id, event_id):
     '''
     Check whether a user has permissions to edit/update an event
         
@@ -49,11 +70,11 @@ def has_edit_permission(user_id, event_id):
 
 
 ## Get Functions
-def get_all_events():
+def get_all_events(session):
     '''Get information of all of events in database'''
-    return list_dict_convert(session.query(Event).all())
+    return session.query(Event).all()
 
-def get_events_by_date(from_date):
+def get_events_by_date(session, from_date, include_description=False):
     '''
     Get all events happening on a given day,
     ordered by start time and event name
@@ -61,17 +82,21 @@ def get_events_by_date(from_date):
     from_date: datetime Date object for target day
     '''
     to_date = from_date + timedelta(days=1)
-    
-    events = session.query(
+    print(include_description)
+    query = session.query(
             Event
         ).filter(
             Event.start_date.between(from_date, to_date)
         ).order_by(
             Event.start_date, Event.start_time, Event.title
-        ).all()
+        )
+    if include_description:
+        # Include the description and description_html fields
+        query = query.options(sqlalchemy.orm.undefer_group("full_description"))
+    events = query.all()
     return events
 
-def get_events_by_month(month,year=None):
+def get_events_by_month(session, month,year=None):
     '''
     Get all events happening in a given month,
     ordered by start time and event name
@@ -87,16 +112,17 @@ def get_events_by_month(month,year=None):
 
     from_date = datetime(year,month,1).date()
     to_date = datetime(year,month,last_day_of_month).date()
-    events = session.query(
+    query = session.query(
             Event
         ).filter(
             Event.start_date.between(from_date, to_date)
         ).order_by(
             Event.start_date, Event.start_time, Event.title
-        ).all()
+        )
+    events = query.all()
     return events
 
-def get_event_tags(events):
+def get_event_tags(session, events):
     '''
     Given a list of Event models, return a list of all tags associated with each event
     '''
@@ -109,7 +135,7 @@ def get_event_tags(events):
 
 
 ## Add Functions
-def add_to_db(obj, others=None,rollbackfunc=None):
+def add_to_db(session, obj, others=None,rollbackfunc=None):
     """Adds objects to database with re-trials
     
     Arguments:
@@ -143,7 +169,7 @@ def add_to_db(obj, others=None,rollbackfunc=None):
             committed = True
     return committed
 
-def add_event(title, user_id, description, event_tags=[0],\
+def add_event(session, title, user_id, description, event_tags=[0],\
               start_date=None, end_date=None, start_time=None, end_time=None, \
               description_html=None, club_id=None, location=None, cta_link=None):
     '''
@@ -166,14 +192,14 @@ def add_event(title, user_id, description, event_tags=[0],\
     event.end_time = end_time
     event.cta_link = cta_link
 
-    committed = add_to_db(event)
+    committed = add_to_db(session, event)
     if committed:
         session.flush()
-        add_event_tags(event.id,event_tags)
+        add_event_tags(session, event.id,event_tags)
         return event.id
     return None
 
-def add_event_tags(event_id, event_tags):
+def add_event_tags(session, event_id, event_tags):
     '''
     Given event_tags (list of ints representing enum Categories)
     and an event_id, link the event to those tags
@@ -192,7 +218,7 @@ def add_event_tags(event_id, event_tags):
     session.add_all(new_tags)
     session.commit()
     
-def add_user(email,user_privilege=0):
+def add_user(session, email,user_privilege=0):
     '''
     Add a new user to the database (if it doesn't exist). 
     
@@ -205,13 +231,13 @@ def add_user(email,user_privilege=0):
         return curr_user.id
     
     new_user = User(email,user_privilege)
-    committed = add_to_db(new_user)
+    committed = add_to_db(session, new_user)
     if committed:
         session.flush()
         return new_user.id
     return None
 
-def add_club(club_name,club_abbrev=None,exec_email=None):
+def add_club(session, club_name,club_abbrev=None,exec_email=None):
     '''
     Add a new club to the database (if it doesn't exist). 
     
@@ -224,14 +250,14 @@ def add_club(club_name,club_abbrev=None,exec_email=None):
         return curr_club.id
     
     new_club = Club(club_name,club_abbrev,exec_email)
-    committed = add_to_db(new_club)
+    committed = add_to_db(session, new_club)
     
     if committed:
         session.flush()
         return new_club.id
     return None
 
-def add_club_member(club_id,user_id,member_privilege=0):
+def add_club_member(session, club_id,user_id,member_privilege=0):
     '''
     Add a user to be a member/officer of a club.
     Requires user_id and club_id to be valid User and Club ID.
@@ -251,11 +277,11 @@ def add_club_member(club_id,user_id,member_privilege=0):
         return
     
     new_membership = ClubMembership(user_id,club_id,member_privilege)
-    add_to_db(new_membership)
+    add_to_db(session, new_membership)
 
 ## Update functions
 
-def update_event(event_id, title, description, event_tags=None,\
+def update_event(session, event_id, title, description, event_tags=None,\
                 start_date=None, end_date=None, start_time=None, end_time=None, \
                 description_html=None, club_id=None, location=None, cta_link=None):
     '''
@@ -297,7 +323,7 @@ def update_event(event_id, title, description, event_tags=None,\
 
     #Update event tags if necessary
     if event_tags:
-        add_event_tags(event_id, event_tags)
+        add_event_tags(session, event_id, event_tags)
     
     return not error
     
