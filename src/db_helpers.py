@@ -1,6 +1,6 @@
-def list_dict_convert(query_res_lst, nested=False,remove_sql_ref=True,):
+def row2dict(query_res_lst, nested=False,remove_sql_ref=True):
     '''
-    Given a list which contains query results from SQLalchemy,
+    Given a list which contains row query results from SQLalchemy,
     return a list of their Python dictionary representation
     
     If `remove_sql_ref` set to True, the `_sa_instance_state`
