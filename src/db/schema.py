@@ -1,3 +1,4 @@
+from ast import In
 import datetime
 
 import configs.creds as creds
@@ -20,6 +21,7 @@ SQL_URL = "mysql+mysqlconnector://%s:%s@sql.mit.edu/%s?charset=utf8" % (
 
 EMAIL_LENGTH = 64
 EMAIL_MESSAGE_ID_LENGTH = 512 #Per RFC-2822 regulation
+EMAIL_IN_REPLY_TO = 512
 EVENT_LINK_LENGTH = 512
 CLUB_NAME_LENGTH = 128
 CLUB_NAME_ABBREV_LENGTH = 32
@@ -183,6 +185,12 @@ class EventTag(SQLBase): #Map event to tags it is associated with
 
 class EventEmail(SQLBase): #Map event email to parsed Event entry
     __tablename__ = "event_emails"
-    message_id = Column(String(EMAIL_MESSAGE_ID_LENGTH), primary_key = True, unique=True)
-    event_id = Column(Integer, ForeignKey("events.id"),nullable=False)
+    event_id = Column(Integer, ForeignKey("events.id"),primary_key=True, unique=True)
+    message_id = Column(String(EMAIL_MESSAGE_ID_LENGTH), nullable=False, unique=True)
+    in_reply_to = Column(String(EMAIL_IN_REPLY_TO),nullable=False)
     event = relationship("Event")
+    
+    def __init__(self,event_id, message_id,in_reply_to):
+        self.event_id = event_id
+        self.message_id = message_id
+        self.in_reply_to = in_reply_to

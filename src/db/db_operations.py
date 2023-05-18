@@ -6,7 +6,7 @@ from datetime import timedelta, datetime
 from contextlib import contextmanager
 from db.db_helpers import *
 from db.schema import \
-    Event, EventTag, User, Club, ClubMembership, sqlengine
+    Event, EventTag, User, Club, ClubMembership, EventEmail, sqlengine
 import db.schema as schema
 import calendar
 
@@ -278,6 +278,17 @@ def add_club_member(session, club_id,user_id,member_privilege=0):
     
     new_membership = ClubMembership(user_id,club_id,member_privilege)
     add_to_db(session, new_membership)
+    
+def add_event_email(session,event_id,message_id,in_reply_to):
+    '''
+    Add email header metadata for a given event with `event_id` 
+    Requires event_id to be a valid Event ID.
+    
+    Assumes that there is no entry in the EventEmail table
+    for this `event_id` already
+    '''
+    event_email = EventEmail(event_id,message_id,in_reply_to)
+    add_to_db(session, event_email)
 
 ## Update functions
 
