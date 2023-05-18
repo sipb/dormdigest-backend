@@ -4,10 +4,10 @@ import sqlalchemy.orm
 from datetime import timedelta, datetime
 
 from contextlib import contextmanager
-from db_helpers import *
-from schema import \
+from db.db_helpers import *
+from db.schema import \
     Event, EventTag, User, Club, ClubMembership, sqlengine
-import schema
+import db.schema as schema
 import calendar
 
 MAX_COMMIT_RETRIES = 10
