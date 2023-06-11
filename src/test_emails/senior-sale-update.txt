@@ -1,0 +1,556 @@
+From username@domain.com  Sun May 14 11:01:34 2023
+Return-Path: <username@domain.com>
+X-Original-To: dormdigest@scripts.domain.com
+Delivered-To: dormdigest@scripts.domain.com
+Received: from outgoing-exchange-5.domain.com (OUTGOING-EXCHANGE-5.DOMAIN.COM [18.9.28.59])
+	by cats-whiskers.domain.com (Postfix) with ESMTP id 05BFD14FEB5
+	for <dormdigest@scripts.domain.com>; Sun, 14 May 2023 11:01:30 -0400 (EDT)
+Received: from w92exedge3.exchange.domain.com (W92EXEDGE3.EXCHANGE.DOMAIN.COM [18.7.73.15])
+	by outgoing-exchange-5.domain.com (8.14.7/8.12.4) with ESMTP id 34EF0rCl028683;
+	Sun, 14 May 2023 11:01:11 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=domain.com; s=outgoing;
+	t=1684076473; bh=j1BrbjuWICvEsmGeJQT4rDkGvXPkhk0+m45BycV8Spw=;
+	h=From:To:Subject:Date:References:In-Reply-To;
+	b=c11u+xWyw2MUAuS8iV8f+YQEB4ybNjm2HYBBU9KcdAqRmEicY0Y+Ig0OWDAvaYnKC
+	 wHqtUWwrtbrN50q/ShdxygJ+PSLYz9PNMRCrL+govrSYOUiMjoMEUcCq6IGylIiYVo
+	 CCa0Grf4/yOQSSAc2R2cYX40kmGs8dCUiQI3NU1jXnnUVqfFm2VTXh2OpIbyk1Bn0M
+	 FouzO3vDX4nbRKWStxMrnjoCRJXiqQ8pjCZsBjLJMCa71BtX7Dd50rvwG4JQ0Yx2VK
+	 XpQoc5CopAAzfVFe+Fd6v9rcl7xOr04LH24XEremcM8KWgYtfCYyFRf9Vra3JXUBxt
+	 19gWlW4qEmAug==
+Received: from oc11expo19.exchange.domain.com (18.9.4.50) by
+ w92exedge3.exchange.domain.com (18.7.73.15) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.48; Sun, 14 May 2023 11:00:50 -0400
+Received: from oc11exhyb6.exchange.domain.com (18.9.1.111) by
+ oc11expo19.exchange.domain.com (18.9.4.50) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.42; Sun, 14 May 2023 11:00:54 -0400
+Received: from NAM10-MW2-obe.outbound.protection.outlook.com (104.47.55.104)
+ by oc11exhyb6.exchange.domain.com (18.9.1.111) with Microsoft SMTP Server (TLS)
+ id 15.0.1497.48 via Frontend Transport; Sun, 14 May 2023 11:00:54 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=S1cR5CxZ869B3qFJ0Jipq4onakptNOgeOLLbsFB5McHrW9NJAUdH0AvZSbnwsV20dyqRM0CvtkBxA3utdGIjmVMKx+Lo2rPKLhovA2OvdYYO+n9h36SlE+Ju+Lz/g2Fh/ruInx+nSDPr1npdhb0KxyebBL+e+yoJ0JdHBGIH080jP43yGIxMWkpo2k9ofjHQ6EHo8Q4+hZG6rUigIZVrQz69Rr3WDydo3YX0jq7Tfo+biMoTHbcwQctCiFc/6fspwTFgnRa7rNWlx+oDeK2yz/gOa4/NC7RtbfntjPvw1lul87XnH+QBHCIxMLcTOr4GR3j6XQMawcfeykebdrWlQg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=j1BrbjuWICvEsmGeJQT4rDkGvXPkhk0+m45BycV8Spw=;
+ b=C31C/eWyA29NdNFkIp3XtiuJtb9+RcuY0huWIUw4I6rzV+9oroh/tE0Oyt1DwZGeFJAJGn8M4EoAPQQxyQvRCfrBoozBT8zrTLayGL1Zz/ws9WymwxHJYMT0lEXCkoLHxRAjyqlVFhF25Qxck2hUbGbO4EpYwosp0mXnJXbaQqo2hElU7MvFjbpczzsLS57IRmcB7nyAbsnYjZ69o6lgCc3xz3euXsUtAH3O5a5dyz/JQ3icCmd/cpT+P8uN5QJqcOzD3fFvsEWY3jjAposCsxcCa5e6vKlaOSIQnb2EKWEZut2uK8PuTWsay9pI15ao1NBh+CJHwhuF6my22CoPBw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=domain.com; dmarc=pass action=none header.from=domain.com; dkim=pass
+ header.d=domain.com; arc=none
+Received: from SN6PR01MB3661.prod.exchangelabs.com (2603:10b6:805:27::15) by
+ CO6PR01MB7483.prod.exchangelabs.com (2603:10b6:303:143::9) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.6387.30; Sun, 14 May 2023 15:00:46 +0000
+Received: from SA1PR01MB6717.prod.exchangelabs.com (2603:10b6:806:1a4::24) by
+ SN6PR01MB3661.prod.exchangelabs.com (2603:10b6:805:27::15) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.6387.28; Sun, 14 May 2023 15:00:34 +0000
+Received: from SA1PR01MB6717.prod.exchangelabs.com
+ ([fe80::aae9:a049:7ac6:88ba]) by SA1PR01MB6717.prod.exchangelabs.com
+ ([fe80::aae9:a049:7ac6:88ba%4]) with mapi id 15.20.6387.030; Sun, 14 May 2023
+ 15:00:33 +0000
+From: Firstname Lastname <username@domain.com>
+To: Firstname Lastname <username@domain.com>
+Subject: Re: Senior sale
+Thread-Topic: Senior sale
+Thread-Index: AQHZfql9KsZK0uFuVUmZlHyWyJx+469Z66WU
+Date: Sun, 14 May 2023 15:00:33 +0000
+Message-ID: <SA1PR01MB67174C33EAA2FE097DB1102EA37B9@SA1PR01MB6717.prod.exchangelabs.com>
+References: <PH0PR01MB671566969052687DA5A57980A36D9@PH0PR01MB6715.prod.exchangelabs.com>
+In-Reply-To: <PH0PR01MB671566969052687DA5A57980A36D9@PH0PR01MB6715.prod.exchangelabs.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=domain.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SA1PR01MB6717:EE_|SN6PR01MB3661:EE_|CO6PR01MB7483:EE_
+x-ms-office365-filtering-correlation-id: cf04a36d-80fe-40fa-5388-08db548bf7ba
+x-ld-processed: 64afd9ba-0ecf-4acf-bc36-935f6235ba8b,ExtAddr,ExtAddr
+x-ms-exchange-atpmessageproperties: SA
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: tMviH8dRdoafiUpskojCdHVjrzwuNYZkxV5wiQKxhYIYS4wkinqZ18bLOYMqDmgOL15LEWW2CDK50EbhHau1P9OZEqFUeh4+3EJCw8yjFoQCYWWLHmcfFsWt5rAAfJ9osizsqleSDjaL+4bdqC9ouQ4nq9es9uMuBvCjAE4///5tohVa4kv6n/L36dwkXL5XC+XwgkBTpGME8KJNpsslsSvy7ZCD8fXZsyvtq1CPGHq8Ncvzuzn4J95RLUjhuam1xeJoKfsARGaTS5se/RrxgqsZR7Y9vz9A9LKjkwEojH70/GaZoO8wvSKlacnEYu0EuGtlUcXTvvM93+5NrEAyukt7TDBOdsrWjs4rXFXdSVaDIpo8MdY8MYrHLms031L571nSt7wFh0BAWofVuXAhM39+WxunYLWfTWSXT8d4D5UvUewfzAmQzVm5s+Xi3U58NFbWVaF26Ef85adhM0U6u2iO3jmgjj8Kb+/HwoLfEH+jyXXscjyVxPjVKSCpS1XAc8XNsnep4kB68Qk4x3ktMhuQvHAhv3TBF7X9Vm4y+vlz7h5QyDWAId/xaj9yFo03VmSAVJ+ny7UA0I1LJR5OzDegtkAa6BM7W9yAtla5TksJ0owbJ/qzXnL0IkdKwUX3fK6Q9gPXssIa57eglGXJdy7SeJ3rz6DwUDMFlhjVtRYuWxcxoZ6F45yC1ytKb0owKTOr30r9UtLDFPtona256yh+CM7aoXddowQX676iB8Y=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR01MB3661.prod.exchangelabs.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(39860400002)(136003)(396003)(346002)(376002)(366004)(451199021)(83380400001)(64756008)(66446008)(66476007)(66556008)(66946007)(91956017)(76116006)(3480700007)(55016003)(7696005)(26005)(53546011)(9686003)(6506007)(966005)(478600001)(186003)(71200400001)(7416002)(7116003)(52536014)(5660300002)(86362001)(6862004)(8676002)(8936002)(4744005)(33656002)(16799955002)(2906002)(6200100001)(38070700005)(41300700001)(316002)(786003)(166002)(122000001)(75432002)(38100700002)(5930299015)(579124003)(15940465004);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?zhEe6Jt4NMkzrfGPuHnydVKWrzzHGwdKD1tT/dpOnLoL3PXoz8aaWbJGfV/r?=
+ =?us-ascii?Q?gZCk6TIAHrPvALvy563hujAjYL9QSVnKSdVkMzY5bWhqe8IYzCqIEq6EghMX?=
+ =?us-ascii?Q?TvyNPlm8VK8aR4a6hHDoXBZk3wBxKcZyO5kUiwQyLnhiIgznSwHJ+cReOAlA?=
+ =?us-ascii?Q?goWMUq3TMeztq4pQIP8KRZLcCnIRQfy0SDtDsLkj8+KraaAP9XVfl+Mf4EGw?=
+ =?us-ascii?Q?+rmp8/pr3sZCXpsVg2tTplcJB8lEb/oGbDjzj2ykVN8O6ByWVvkcJr2+g4gQ?=
+ =?us-ascii?Q?lsRvzJMIXffyuhnlxh3bwCD2JU05qZVFrNBSUx+Cwr8T2cm7u8j/spSx7q8B?=
+ =?us-ascii?Q?Z0FS0b4/EBUmF8I1HK4h6j1G7i/VTo7LGmMdnSIfCuOR+ztN20WKlvqBHJo0?=
+ =?us-ascii?Q?KP3Qen+R8apQ/A5QVMxCIWSCrDP5vf2CFl0xKzL5xueKF15LFogZyCjaBKbQ?=
+ =?us-ascii?Q?q8iIcR0iwY4Fcm4dmWYNfdtuUY1OOkwTVixVoZtGsEB55fftS1gpkL4ezinD?=
+ =?us-ascii?Q?95LHB/8iEN5AM4kR/AL9nc1zBgxNIyZu8MUtPMYpMx3rTwgEiTEclIjo05JW?=
+ =?us-ascii?Q?cbXekpHB/MHdxm6KbJI4CSrmF78lTtAK3EFxmFj9p0Tm9z459+G+WmL68zR/?=
+ =?us-ascii?Q?UsZquUl2kLio8XrKDV5UBjfeNNSnK68uldpgyHNHzOnh5XE+sEbejrsejXAQ?=
+ =?us-ascii?Q?NU8l7XJKmaz1wF31KW2XU+i07egOoFTOjMiF5ogg7Bdmj17Y1EVapchZsHUh?=
+ =?us-ascii?Q?5kckA4wuIhPiqJboub55sxo+dcC1EFwBea9w16wjabGFW6bgewl4La8dvw3c?=
+ =?us-ascii?Q?MTU39mNEM/FwpBoEZdvUUXTcwKCd9gpNLczXWfYFzT5OfY5oZt970B0zCeQ1?=
+ =?us-ascii?Q?+3sFmQ89B7MD4R+XjaB0yV2hSaC8m4ap11t2tks/qNAaMt4/UL0dkNv7QJkG?=
+ =?us-ascii?Q?Db7VoZihEvJcuhUCDvsSaTde1aH4M4zrxwH5L6yTivBpbfsI1uhlLZbYFCnn?=
+ =?us-ascii?Q?wm90jLS8mZns588KnK2subDNNGYW6b0+vpCp86QnqArtPv0rgcg6lVzWJq1o?=
+ =?us-ascii?Q?6Vt4foUYQ7NcFCfy86RRrNN7GmkHf6az2taRgpTveMgB8Hq0eATPE9orWJfV?=
+ =?us-ascii?Q?tqb+u7VVWiTmhnCtL3qdEeWBS0qeAHFkdQXGSaxZb/BA5UhXnDGymrAHsWL4?=
+ =?us-ascii?Q?e+FC3rtABebiM/KnMQiAre1BOEo1lurgoiUW6+DlA+Q4WOomb2LCcSa1O1FD?=
+ =?us-ascii?Q?X4aFEfL1jlUq5pSPuvQDa1SlpF1/KwR2ZKAwOithtmSJ1vfZmLqk9jG9StoN?=
+ =?us-ascii?Q?X4bhfTi90FxTLAd5/UtEt0AHyWYYIeHYwbPg1m3NgObQrwcmvvGqEINBTb7z?=
+ =?us-ascii?Q?3SP8nVle70Di4VdX0b+aCV+2FsNWXBkB74XbhWQeoYLIH+TyaVpoHAoF/Cfu?=
+ =?us-ascii?Q?9P2BQ+f0GPez2by2plCvXO2skf/aT1GWw1U7J0TWn7XdMNTGqmsiXpDfOBM7?=
+ =?us-ascii?Q?LwXTjtpAJU5hQ9wYmmmL9oD3tgwLMEspQS4b/Y3kwSRcSml3lChhhHVa5bJG?=
+ =?us-ascii?Q?iO1L71ope1jKcdRIWT89p1FjAPG+AFrLCniUi+ud?=
+Content-Type: multipart/alternative;
+	boundary="_000_SA1PR01MB67174C33EAA2FE097DB1102EA37B9SA1PR01MB6717prod_"
+MIME-Version: 1.0
+X-Auto-Response-Suppress: DR, OOF, AutoReply
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR01MB6717.prod.exchangelabs.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: cf04a36d-80fe-40fa-5388-08db548bf7ba
+X-MS-Exchange-CrossTenant-originalarrivaltime: 14 May 2023 15:00:33.5896
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 64afd9ba-0ecf-4acf-bc36-935f6235ba8b
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: LiIT4iv4ZO0ay2yhR/wsu8tSwTL4KodrCKdmzvOxZNSPBw1fUe4zn0SX47YUibEl
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO6PR01MB7483
+X-OriginatorOrg: domain.com
+
+--_000_SA1PR01MB67174C33EAA2FE097DB1102EA37B9SA1PR01MB6717prod_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+hi all,
+
+added some more stuff to my senior sale.
+
+slides: [LINK REDACTED]
+
+the bike is still available, selling for $250 now, price negotiable.
+
+comment to claim, message me on facebook[LINK REDACTED] for payment/pickup/dropoff/questions
+
+Ty,
+Firstname
+
+___
+bcc'ed to dorms, blue for bc-talk
+
+
+
+From: Firstname Lastname <username@domain.com>
+Date: Thursday, May 4, 2023 at 1:03 PM
+To: Firstname Lastname <username@domain.com>
+Subject: Senior sale
+hi all, another senior sale!
+
+slides: [LINK REDACTED]
+
+featuring:
+
+  *   Fuji feather bike, $300
+  *   Clothes
+  *   Random little appliances
+  *   Books ($2 ea)
+
+Comment to claim, message me on facebook[LINK REDACTED] for payment/pickup/dropoff/questions
+
+Ty,
+Firstname
+
+___
+bcc'ed to dorms, blue for bc-talk
+
+
+--_000_SA1PR01MB67174C33EAA2FE097DB1102EA37B9SA1PR01MB6717prod_
+Content-Type: text/html; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+<html xmlns:o=3D"urn:schemas-microsoft-com:office:office" xmlns:w=3D"urn:sc=
+hemas-microsoft-com:office:word" xmlns:m=3D"http://schemas.microsoft.com/of=
+fice/2004/12/omml" xmlns=3D"http://www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dus-ascii"=
+>
+<meta name=3D"Generator" content=3D"Microsoft Word 15 (filtered medium)">
+<style><!--
+/* Font Definitions */
+@font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+	{font-family:"Yu Gothic";
+	panose-1:2 11 4 0 0 0 0 0 0 0;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+@font-face
+	{font-family:"\@Yu Gothic";
+	panose-1:2 11 4 0 0 0 0 0 0 0;}
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin:0in;
+	font-size:10.0pt;
+	font-family:"Calibri",sans-serif;}
+a:link, span.MsoHyperlink
+	{mso-style-priority:99;
+	color:#0563C1;
+	text-decoration:underline;}
+p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph
+	{mso-style-priority:34;
+	mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	font-size:10.0pt;
+	font-family:"Calibri",sans-serif;}
+span.apple-converted-space
+	{mso-style-name:apple-converted-space;}
+span.EmailStyle20
+	{mso-style-type:personal-reply;
+	font-family:"Calibri",sans-serif;
+	color:windowtext;}
+.MsoChpDefault
+	{mso-style-type:export-only;
+	font-size:10.0pt;
+	mso-ligatures:none;}
+@page WordSection1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.0in 1.0in 1.0in;}
+div.WordSection1
+	{page:WordSection1;}
+/* List Definitions */
+@list l0
+	{mso-list-id:223837856;
+	mso-list-template-ids:1118200176;}
+@list l0:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7 ;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l0:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7 ;
+	mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l0:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7 ;
+	mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l0:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7 ;
+	mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l0:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7 ;
+	mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l0:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7 ;
+	mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l0:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7 ;
+	mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l0:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7 ;
+	mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l0:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7 ;
+	mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l1
+	{mso-list-id:1834056106;
+	mso-list-template-ids:-1624978304;}
+@list l1:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7 ;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l1:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7 ;
+	mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l1:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7 ;
+	mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l1:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7 ;
+	mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l1:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7 ;
+	mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l1:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7 ;
+	mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l1:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7 ;
+	mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l1:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7 ;
+	mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l1:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7 ;
+	mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+ol
+	{margin-bottom:0in;}
+ul
+	{margin-bottom:0in;}
+--></style>
+</head>
+<body lang=3D"EN-US" link=3D"#0563C1" vlink=3D"#954F72" style=3D"word-wrap:=
+break-word">
+<div class=3D"WordSection1">
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt">hi all, <o:p></o:p>=
+</span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt"><o:p>&nbsp;</o:p></=
+span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt">added some more stu=
+ff to my senior sale.<o:p></o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt"><o:p>&nbsp;</o:p></=
+span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;color:#212121;mso-li=
+gatures:standardcontextual">slides:<span class=3D"apple-converted-space">&n=
+bsp;</span></span><span style=3D"font-size:11.0pt;mso-ligatures:standardcon=
+textual"><a href=3D"[LINK REDACTED]">[LINK REDACTED]</a><o:p></o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;mso-ligatures:standa=
+rdcontextual"><o:p>&nbsp;</o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;mso-ligatures:standa=
+rdcontextual">the bike is still available, selling for $250 now, price nego=
+tiable.
+<o:p></o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;mso-ligatures:standa=
+rdcontextual"><o:p>&nbsp;</o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;color:#212121;mso-li=
+gatures:standardcontextual">comment to claim,<span class=3D"apple-converted=
+-space">&nbsp;<a href=3D"[LINK REDACTED]">message me on facebook</a></span> for
+ payment/pickup/dropoff/questions</span><span style=3D"font-size:11.0pt;mso=
+-ligatures:standardcontextual"><o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"caret-color: rgb(33, 33, 33);font-variant-c=
+aps: normal;orphans: auto;text-align:start;widows: auto;-webkit-text-size-a=
+djust: auto;-webkit-text-stroke-width: 0px;word-spacing:0px">
+<span style=3D"font-size:11.0pt;color:#212121;mso-ligatures:standardcontext=
+ual">&nbsp;</span><span style=3D"font-size:11.0pt;mso-ligatures:standardcon=
+textual"><o:p></o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;color:#212121;mso-li=
+gatures:standardcontextual">Ty,</span><span style=3D"font-size:11.0pt;mso-l=
+igatures:standardcontextual"><o:p></o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;color:#212121;mso-li=
+gatures:standardcontextual">Firstname&nbsp;</span><span style=3D"font-size:=
+11.0pt;mso-ligatures:standardcontextual"><o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"caret-color: rgb(33, 33, 33);font-variant-c=
+aps: normal;orphans: auto;text-align:start;widows: auto;-webkit-text-size-a=
+djust: auto;-webkit-text-stroke-width: 0px;word-spacing:0px">
+<span style=3D"font-size:11.0pt;color:#212121;mso-ligatures:standardcontext=
+ual">&nbsp;</span><span style=3D"font-size:11.0pt;mso-ligatures:standardcon=
+textual"><o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"caret-color: rgb(33, 33, 33);font-variant-c=
+aps: normal;orphans: auto;text-align:start;widows: auto;-webkit-text-size-a=
+djust: auto;-webkit-text-stroke-width: 0px;word-spacing:0px">
+<span style=3D"font-size:8.0pt;color:black;mso-ligatures:standardcontextual=
+">___</span><span style=3D"font-size:11.0pt;mso-ligatures:standardcontextua=
+l"><o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"caret-color: rgb(33, 33, 33);font-variant-c=
+aps: normal;orphans: auto;text-align:start;widows: auto;-webkit-text-size-a=
+djust: auto;-webkit-text-stroke-width: 0px;word-spacing:0px">
+<span style=3D"font-size:9.0pt;color:black;mso-ligatures:standardcontextual=
+">bcc'ed to dorms,
+</span><span style=3D"font-size:9.0pt;color:#4472C4;mso-ligatures:standardc=
+ontextual">blue
+</span><span style=3D"font-size:9.0pt;color:black;mso-ligatures:standardcon=
+textual">for bc-talk</span><span style=3D"font-size:11.0pt;mso-ligatures:st=
+andardcontextual"><o:p></o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;mso-ligatures:standa=
+rdcontextual"><o:p>&nbsp;</o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt"><o:p>&nbsp;</o:p></=
+span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt"><o:p>&nbsp;</o:p></=
+span></p>
+<div style=3D"border:none;border-top:solid #B5C4DF 1.0pt;padding:3.0pt 0in =
+0in 0in">
+<p class=3D"MsoNormal" style=3D"margin-bottom:12.0pt"><b><span style=3D"fon=
+t-size:12.0pt;color:black">From:
+</span></b><span style=3D"font-size:12.0pt;color:black">Firstname Lastname &lt=
+;username@domain.com&gt;<br>
+<b>Date: </b>Thursday, May 4, 2023 at 1:03 PM<br>
+<b>To: </b>Firstname Lastname &lt;username@domain.com&gt;<br>
+<b>Subject: </b>Senior sale<o:p></o:p></span></p>
+</div>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;color:#212121;mso-li=
+gatures:standardcontextual">hi all, another senior sale!</span><span style=
+=3D"font-size:11.0pt;mso-ligatures:standardcontextual"><o:p></o:p></span></=
+p>
+<p class=3D"MsoNormal" style=3D"caret-color: rgb(33, 33, 33);font-variant-c=
+aps: normal;orphans: auto;text-align:start;widows: auto;-webkit-text-size-a=
+djust: auto;-webkit-text-stroke-width: 0px;word-spacing:0px">
+<span style=3D"font-size:11.0pt;color:#212121;mso-ligatures:standardcontext=
+ual">&nbsp;</span><span style=3D"font-size:11.0pt;mso-ligatures:standardcon=
+textual"><o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"caret-color: rgb(33, 33, 33);font-variant-c=
+aps: normal;orphans: auto;text-align:start;widows: auto;-webkit-text-size-a=
+djust: auto;-webkit-text-stroke-width: 0px;word-spacing:0px">
+<span style=3D"font-size:11.0pt;color:#212121;mso-ligatures:standardcontext=
+ual">slides:<span class=3D"apple-converted-space">&nbsp;</span></span><span=
+ style=3D"font-size:11.0pt;mso-ligatures:standardcontextual"><a href=3D"[LINK REDACTED]">[LINK REDACTED]</a><o:p></o:p></span>=
+</p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;color:#212121;mso-li=
+gatures:standardcontextual">&nbsp;</span><span style=3D"font-size:11.0pt;ms=
+o-ligatures:standardcontextual"><o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"caret-color: rgb(33, 33, 33);font-variant-c=
+aps: normal;orphans: auto;text-align:start;widows: auto;-webkit-text-size-a=
+djust: auto;-webkit-text-stroke-width: 0px;word-spacing:0px">
+<span style=3D"font-size:11.0pt;color:#212121;mso-ligatures:standardcontext=
+ual">featuring:</span><span style=3D"font-size:11.0pt;mso-ligatures:standar=
+dcontextual"><o:p></o:p></span></p>
+<ul style=3D"margin-top:0in;caret-color: rgb(33, 33, 33);font-variant-caps:=
+ normal;orphans: auto;text-align:start;widows: auto;-webkit-text-size-adjus=
+t: auto;-webkit-text-stroke-width: 0px;word-spacing:0px" type=3D"disc">
+<li class=3D"MsoListParagraph" style=3D"color:#212121;margin-top:0in;margin=
+-bottom:0in;mso-list:l0 level1 lfo3">
+<span style=3D"font-size:11.0pt">Fuji feather bike, $300<o:p></o:p></span><=
+/li><li class=3D"MsoListParagraph" style=3D"color:#212121;margin-top:0in;ma=
+rgin-bottom:0in;mso-list:l0 level1 lfo3">
+<span style=3D"font-size:11.0pt">Clothes<o:p></o:p></span></li><li class=3D=
+"MsoListParagraph" style=3D"color:#212121;margin-top:0in;margin-bottom:0in;=
+mso-list:l0 level1 lfo3">
+<span style=3D"font-size:11.0pt">Random little appliances<o:p></o:p></span>=
+</li><li class=3D"MsoListParagraph" style=3D"color:#212121;margin-top:0in;m=
+argin-bottom:0in;mso-list:l0 level1 lfo3">
+<span style=3D"font-size:11.0pt">Books ($2 ea)<o:p></o:p></span></li></ul>
+<p class=3D"MsoNormal" style=3D"caret-color: rgb(33, 33, 33);font-variant-c=
+aps: normal;orphans: auto;text-align:start;widows: auto;-webkit-text-size-a=
+djust: auto;-webkit-text-stroke-width: 0px;word-spacing:0px">
+<span style=3D"font-size:11.0pt;color:#212121;mso-ligatures:standardcontext=
+ual">&nbsp;</span><span style=3D"font-size:11.0pt;mso-ligatures:standardcon=
+textual"><o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"caret-color: rgb(33, 33, 33);font-variant-c=
+aps: normal;orphans: auto;text-align:start;widows: auto;-webkit-text-size-a=
+djust: auto;-webkit-text-stroke-width: 0px;word-spacing:0px">
+<span style=3D"font-size:11.0pt;color:#212121;mso-ligatures:standardcontext=
+ual">Comment to claim,<span class=3D"apple-converted-space">&nbsp;<a href=
+=3D"[LINK REDACTED]">message me o=
+n facebook</a></span> for payment/pickup/dropoff/questions</span><span styl=
+e=3D"font-size:11.0pt;mso-ligatures:standardcontextual"><o:p></o:p></span><=
+/p>
+<p class=3D"MsoNormal" style=3D"caret-color: rgb(33, 33, 33);font-variant-c=
+aps: normal;orphans: auto;text-align:start;widows: auto;-webkit-text-size-a=
+djust: auto;-webkit-text-stroke-width: 0px;word-spacing:0px">
+<span style=3D"font-size:11.0pt;color:#212121;mso-ligatures:standardcontext=
+ual">&nbsp;</span><span style=3D"font-size:11.0pt;mso-ligatures:standardcon=
+textual"><o:p></o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;color:#212121;mso-li=
+gatures:standardcontextual">Ty,</span><span style=3D"font-size:11.0pt;mso-l=
+igatures:standardcontextual"><o:p></o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;color:#212121;mso-li=
+gatures:standardcontextual">Firstname&nbsp;</span><span style=3D"font-size:=
+11.0pt;mso-ligatures:standardcontextual"><o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"caret-color: rgb(33, 33, 33);font-variant-c=
+aps: normal;orphans: auto;text-align:start;widows: auto;-webkit-text-size-a=
+djust: auto;-webkit-text-stroke-width: 0px;word-spacing:0px">
+<span style=3D"font-size:11.0pt;color:#212121;mso-ligatures:standardcontext=
+ual">&nbsp;</span><span style=3D"font-size:11.0pt;mso-ligatures:standardcon=
+textual"><o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"caret-color: rgb(33, 33, 33);font-variant-c=
+aps: normal;orphans: auto;text-align:start;widows: auto;-webkit-text-size-a=
+djust: auto;-webkit-text-stroke-width: 0px;word-spacing:0px">
+<span style=3D"font-size:8.0pt;color:black;mso-ligatures:standardcontextual=
+">___</span><span style=3D"font-size:11.0pt;mso-ligatures:standardcontextua=
+l"><o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"caret-color: rgb(33, 33, 33);font-variant-c=
+aps: normal;orphans: auto;text-align:start;widows: auto;-webkit-text-size-a=
+djust: auto;-webkit-text-stroke-width: 0px;word-spacing:0px">
+<span style=3D"font-size:9.0pt;color:black;mso-ligatures:standardcontextual=
+">bcc'ed to dorms,
+</span><span style=3D"font-size:9.0pt;color:#4472C4;mso-ligatures:standardc=
+ontextual">blue
+</span><span style=3D"font-size:9.0pt;color:black;mso-ligatures:standardcon=
+textual">for bc-talk</span><span style=3D"font-size:11.0pt;mso-ligatures:st=
+andardcontextual"><o:p></o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;mso-ligatures:standa=
+rdcontextual">&nbsp;<o:p></o:p></span></p>
+</div>
+</body>
+</html>
+
+--_000_SA1PR01MB67174C33EAA2FE097DB1102EA37B9SA1PR01MB6717prod_--
+
+

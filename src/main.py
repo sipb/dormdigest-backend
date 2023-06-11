@@ -91,7 +91,7 @@ async def digest(req: EmailModel):
 
     verified = parsed.sender.email.domain.lower() == "mit.edu" # could be improved?
     sender_email = str(parsed.sender.email).lower()
-    if verified:
+    if verified and parsed.dormspam:
         with db_operations.session_scope() as session:
             user_id = db_operations.add_user(session, sender_email)
             club_id = None
