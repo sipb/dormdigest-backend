@@ -1,17 +1,36 @@
 import sys
 import os
 import json
-from urllib import request, parse, error
+from urllib import request, error
+from datetime import datetime
+from pathlib import Path
 
 from config import ENDPOINT, WEBHOOK_URL, TOKEN
 
 OPERATING = True
 
-def save_last_email(email, append=False):
-  mode = "a" if append else "w"
-  with open("last.txt", mode) as f:
-    f.write(email + "\n\n")
-    f.write("---\n\n")
+_headers = {"Content-Type": "application/json"}
+
+def save_last_email(email):
+  filename = datetime.now().strftime("%Y-%m-%d_%H-%M-%S.txt")
+  filepath = Path("./saved") / filename
+  with open(filepath, "w") as f:
+    f.write(email + "\n")
+
+  link = "mail_scripts/saved/" + filename
+  return link
+
+def send_error_to_mattermost(http_error):
+  link = save_last_email(email)
+
+  if WEBHOOK_URL is None:
+      return
+
+  text = "**{}**: {}\n\nEmail was saved to: {}".format(http_error.code, http_error.reason, link)
+  data = {"text": text}
+
+  req = request.Request(WEBHOOK_URL, data=json.dumps(data).encode(), headers=_headers, method="POST")
+  request.urlopen(req)
 
 def pass_to_api(email):
   if ENDPOINT is None or TOKEN is None:
@@ -21,30 +40,15 @@ def pass_to_api(email):
     "email": email,
     "token": TOKEN,
   }
-  headers = {"Content-Type": "application/json"}
-  req = request.Request(ENDPOINT, data=json.dumps(payload).encode(), headers=headers, method="POST")
+  req = request.Request(ENDPOINT, data=json.dumps(payload).encode(), headers=_headers, method="POST")
 
   try:
     response = request.urlopen(req)
     if response.status in (200, 201): return
   except error.HTTPError as e:
-    if WEBHOOK_URL is None:
-      return
-
-    text = "**{}**: {}".format(e.code, e.reason)
-    error_data = {
-      "text": text,
-      "attachments": [{
-        "fallback": "(email attached)",
-        "text": email,
-      }]
-    }
-
-    req = request.Request(WEBHOOK_URL, data=json.dumps(error_data).encode(), headers=headers, method="POST")
-    request.urlopen(req)
+    send_error_to_mattermost(e)
 
 if __name__ == "__main__":
   if OPERATING:
     email = sys.stdin.read()
-    save_last_email(email, False)
     pass_to_api(email)
