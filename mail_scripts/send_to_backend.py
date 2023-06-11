@@ -1,13 +1,11 @@
-"""
-Forward the email to backend at the correct endpoint
-"""
-
 import sys
 import os
 import json
 from urllib import request, parse, error
 
 from config import ENDPOINT, WEBHOOK_URL, TOKEN
+
+OPERATING = True
 
 def save_last_email(email, append=False):
   mode = "a" if append else "w"
@@ -46,6 +44,7 @@ def pass_to_api(email):
     request.urlopen(req)
 
 if __name__ == "__main__":
-  email = sys.stdin.read()
-  save_last_email(email)
-  pass_to_api(email)
+  if OPERATING:
+    email = sys.stdin.read()
+    save_last_email(email, False)
+    pass_to_api(email)
