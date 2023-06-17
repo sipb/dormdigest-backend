@@ -142,6 +142,8 @@ class User(SQLBase):
             'email': self.email,
             'user_privilege': self.user_privilege
         }
+    def get_user_email(self):
+        return self.email
 
 class Club(SQLBase): 
     __tablename__ = "clubs"
