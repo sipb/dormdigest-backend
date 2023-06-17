@@ -52,9 +52,11 @@ async def get_events_by_month(req: GetEventsByMonth):
     with db_operations.session_scope() as session:
         events = db_operations.get_events_by_month(session,req.month,req.year)
         tags = db_operations.get_event_tags(session,events)
+        users = db_operations.get_event_user_emails(session,events)
         return {
             'events': row2dict(events),
-            'tags': tags
+            'tags': tags,
+            'users': users
         }
     
 @app.post("/get_events_by_date")
@@ -62,9 +64,11 @@ async def get_events_by_date(req: GetEventsByDate):
     with db_operations.session_scope() as session:
         events = db_operations.get_events_by_date(session,req.from_date,req.include_description)
         tags = db_operations.get_event_tags(session,events)
+        users = db_operations.get_event_user_emails(session,events)
         return {
             'events': row2dict(events),
-            'tags': tags
+            'tags': tags,
+            'users': users
         }
 
 @app.post("/eat", status_code=status.HTTP_201_CREATED)

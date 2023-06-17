@@ -82,7 +82,6 @@ def get_events_by_date(session, from_date, include_description=False):
     from_date: datetime Date object for target day
     '''
     to_date = from_date + timedelta(days=1)
-    print(include_description)
     query = session.query(
             Event
         ).filter(
@@ -133,6 +132,18 @@ def get_event_tags(session, events):
         res.append(event_tags)
     return res
 
+def get_event_user_emails(session, events):
+    '''
+    Given a list of Event models, return a list of the user email associated with each event (e.g. sender)
+    '''
+    res = []
+    for event in events:
+        #Using relationships defined in Event
+        if event.user:
+            res.append(event.user.get_user_email())
+        else:
+            res.append("unknown_user") # Default "unknown_user" is failsafe in case we misadd a user
+    return res
 
 ## Add Functions
 def add_to_db(session, obj, others=None,rollbackfunc=None):
