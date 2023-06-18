@@ -81,11 +81,10 @@ def get_events_by_date(session, from_date, include_description=False):
     
     from_date: datetime Date object for target day
     '''
-    to_date = from_date + timedelta(days=1)
     query = session.query(
             Event
         ).filter(
-            Event.start_date.between(from_date, to_date)
+            Event.start_date.between(from_date, from_date)
         ).order_by(
             Event.start_date, Event.start_time, Event.title
         )
