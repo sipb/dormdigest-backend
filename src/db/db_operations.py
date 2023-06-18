@@ -303,11 +303,38 @@ def add_event_email(session,event_id,message_id,in_reply_to):
 
 ## Update functions
 
+def update_event_description(session, event_id, description, description_html):
+    '''
+    Update descriptions for an existing event with id `event_id` in the database
+    
+    Returns whether update was successful
+    '''
+    event = session.query(Event).filter(Event.id==event_id).first()
+    if not event: 
+        return False #Event doesn't exist
+    
+    error=False
+    # Attempt to make corresponding updates
+    try: 
+        event.description = description
+        event.description_html = description_html
+    except:
+        session.rollback()
+        error=True
+    else:
+        session.commit()
+    
+    return not error
+
 def update_event(session, event_id, title, description, event_tags=None,\
                 start_date=None, end_date=None, start_time=None, end_time=None, \
                 description_html=None, club_id=None, location=None, cta_link=None):
     '''
     Update an existing event with id `event_id` in the database
+    
+    Note: Use this function if you are updating many different
+    aspects of an event at once. Otherwise, it is preferable to
+    use a more specific update function.
     
     Disallowed fields:
     - user_id, club_id
@@ -348,4 +375,3 @@ def update_event(session, event_id, title, description, event_tags=None,\
         add_event_tags(session, event_id, event_tags)
     
     return not error
-    

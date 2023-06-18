@@ -145,7 +145,6 @@ class Email:
             return self.content["text/plain"]
         elif "text/html" in self.content:
             return html2text(self.content["text/html"])
-        
         return ""
 
     @property
