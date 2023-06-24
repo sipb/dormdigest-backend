@@ -5,6 +5,7 @@ import sys
 import datetime
 import re
 import base64
+import quopri
 import html.parser
 
 from .parser import Parser, ParserChain
@@ -214,7 +215,7 @@ def eat(raw) -> Email:
     
     content: dict[str, str] = {}
     for content_type in CONTENT_TYPES:
-        match = re.search( # I'm not convinced this works for all emails
+        match = re.search( # I'm not *entirely* convinced this works for all emails
             rf"Content-Type: {content_type};.*?charset=.*?Content-Transfer-Encoding:(.*?)\n\n(.*?)(?=--)",
             raw,
             re.DOTALL,
@@ -224,7 +225,9 @@ def eat(raw) -> Email:
             message = match.group(2).strip()
             if encoding == "base64":
                 message = base64.b64decode(message).decode("utf-8")
-            
+            elif encoding == "quoted-printable":
+                message = quopri.decodestring(message).decode("utf-8")
+
             content[content_type] = message
 
     if not content:
