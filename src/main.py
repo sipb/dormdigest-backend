@@ -58,13 +58,13 @@ async def get_event_category_frequency_for_month(req: GetEventsByMonth):
     with db_operations.session_scope() as session:
         events = db_operations.get_events_by_month(session,req.month,req.year)
         events_categories = db_operations.get_event_tags(session,events, convertName=True) #Make sure to get actual category names
-        print("Event categories",events_categories)
+        #print("Event categories",events_categories)
         event_categories_by_date = {} # Hold the tags used in each day
         
         # Sort events in bins of the day they start on,
         # keeping track of all event categories that are used on that day
         for (event, event_categories) in zip(events, events_categories):
-            date = event.start_date.strftime("%m-%d-%Y")
+            date = event.start_date.strftime("%Y-%m-%d")
             if date not in event_categories_by_date:
                 event_categories_by_date[date] = event_categories.copy() #Memory safety
             else:
