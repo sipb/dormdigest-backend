@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from db.db_helpers import *
 from db.schema import \
     Event, EventTag, User, Club, ClubMembership, EventEmail, sqlengine
+from utils.category_parser import parse_tags
 import db.schema as schema
 import calendar
 
@@ -120,15 +121,21 @@ def get_events_by_month(session, month,year=None):
     events = query.all()
     return events
 
-def get_event_tags(session, events):
+def get_event_tags(session, events, convertName=False):
     '''
     Given a list of Event models, return a list of all tags associated with each event
+    
+    If `convertToName` is True, tag number will be converted to the category name.
     '''
     res = []
     for event in events:
         #Using relationships defined in Event
         event_tags = [x.get_tag_value() for x in event.tags.all()]
-        res.append(event_tags)
+        if convertName: #Parse tag numbers into category names
+            event_categories = parse_tags(event_tags)
+            res.append(event_categories)
+        else:
+            res.append(event_tags)
     return res
 
 def get_event_user_emails(session, events):
