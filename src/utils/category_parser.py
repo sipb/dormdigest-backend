@@ -5,9 +5,11 @@ from typing import List, Optional, Set
 @dataclass
 class Category:
    keywords: List[str]
+   name: str
    info: Optional[str] = None
 
-OTHER = Category([], "Default category")
+
+OTHER = Category([], "OTHER", "Default category")
 
 FOOD = Category(
    [
@@ -17,16 +19,19 @@ FOOD = Category(
       "breakfast provided", "dinner included", "lunch included", "ramen",
       "kbbq", "dumplings", "waffles", "csc", "dim sum", "drink",
    ],
+   "FOOD"
 )
 
 CAREER = Category(
    ["career", "summer plans", "internship", "xfair", "recruiting",],
+   "CAREER",
    "Career and recruiting events held by companies on campus."
 )
 
 FUNDRAISING = Category(
    ["donate", "donated", "donation",],
-   "Events that benefit a cause.",
+   "FUNDRAISING",
+   "Events that benefit a cause."
 )
 
 APPLICATION = Category(
@@ -34,7 +39,8 @@ APPLICATION = Category(
       "apply", "application", "join", "deadline", "sign up", "audition",
       "application",
    ],
-   "For joining or applying for something.",
+   "APPLICATION",
+   "For joining or applying for something."
 )
 
 PERFORMANCE = Category(
@@ -47,11 +53,13 @@ PERFORMANCE = Category(
       "fixation", "bhangra", "roadkill", "vagina monologues", "24 hour show",
       "acappella", "admission", "ticket",
    ],
-   "Dance, music, a capella, and other concerts and performances.",
+   "PERFORMANCE",
+   "Dance, music, a capella, and other concerts and performances."
 )
 
 BOBA = Category(
    ["boba", "bubble tea", "kung fu tea", "kft", "teado", "tea do",],
+   "BOBA"
 )
 
 TALKS = Category(
@@ -59,7 +67,8 @@ TALKS = Category(
       "discussion", "q&a", "tech talk", "recruiting", "info session",
       "information session", "infosession", "workshop", "research",
    ],
-   "Talks, workshops, short classes.",
+   "TALKS",
+   "Talks, workshops, short classes."
 )
 
 # as they're stored in the database
@@ -91,3 +100,13 @@ def parse_categories(text: str) -> Set[int]:
 
    return categories
 
+def parse_tags(tags: list[int]) -> list[str]:
+   """Convert tag numbers to corresponding category names
+   
+   Return a list of unique category names
+   
+   Args:
+         tags: The list of tags associated with an event/events
+   """
+   categoryNames = [CATEGORIES[tag].name for tag in tags]
+   return categoryNames
