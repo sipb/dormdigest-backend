@@ -178,6 +178,17 @@ def nibble(header: str, pattern: str, raw: str, headers_not_found: Optional[list
     if headers_not_found: headers_not_found.append(header)
     return None
 
+def parse_date(date: str) -> datetime.datetime:
+    fmt = "%a, %d %b %Y %H:%M:%S %z"
+    try:
+        sent = datetime.datetime.strptime(date, fmt)
+    except ValueError as v:
+        extra = v.args[0].partition("unconverted data remains: ")[-1]
+        if not extra: raise
+        sent = datetime.datetime.strptime(date[:-len(extra)], fmt)
+
+    return sent
+
 def eat(raw) -> Email:
     """Digest a raw email
 
@@ -211,22 +222,23 @@ def eat(raw) -> Email:
     sender_contact = parse_contact(sender)
     to_contact = parse_contact(to)
 
-    sent = datetime.datetime.strptime(date, "%a, %d %b %Y %H:%M:%S %z")
+    sent = parse_date(date)
     
     content: dict[str, str] = {}
     for content_type in CONTENT_TYPES:
         match = re.search( # I'm not *entirely* convinced this works for all emails
-            rf"Content-Type: {content_type};.*?charset=.*?Content-Transfer-Encoding:(.*?)\n\n(.*?)(?=--)",
+            rf"""Content-Type: {content_type};.*?charset="(.*?)"\nContent-Transfer-Encoding:(.*?)\n\n(.*?)(?=--)""",
             raw,
             re.DOTALL,
         )
         if match:
-            encoding = match.group(1).strip()
-            message = match.group(2).strip()
+            charset = match.group(1).lower()
+            encoding = match.group(2).strip()
+            message = match.group(3).strip()
             if encoding == "base64":
-                message = base64.b64decode(message).decode("utf-8")
+                message = base64.b64decode(message).decode(charset)
             elif encoding == "quoted-printable":
-                message = quopri.decodestring(message).decode("utf-8")
+                message = quopri.decodestring(message).decode(charset)
 
             content[content_type] = message
 
