@@ -178,6 +178,17 @@ def nibble(header: str, pattern: str, raw: str, headers_not_found: Optional[list
     if headers_not_found: headers_not_found.append(header)
     return None
 
+def parse_date(date: str) -> datetime.datetime:
+    fmt = "%a, %d %b %Y %H:%M:%S %z"
+    try:
+        sent = datetime.datetime.strptime(date, fmt)
+    except ValueError as v:
+        extra = v.args[0].partition("unconverted data remains: ")[-1]
+        if not extra: raise
+        sent = datetime.datetime.strptime(date[:-len(extra)], fmt)
+
+    return sent
+
 def eat(raw) -> Email:
     """Digest a raw email
 
@@ -211,7 +222,7 @@ def eat(raw) -> Email:
     sender_contact = parse_contact(sender)
     to_contact = parse_contact(to)
 
-    sent = datetime.datetime.strptime(date, "%a, %d %b %Y %H:%M:%S %z")
+    sent = parse_date(date)
     
     content: dict[str, str] = {}
     for content_type in CONTENT_TYPES:
