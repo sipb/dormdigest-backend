@@ -216,17 +216,18 @@ def eat(raw) -> Email:
     content: dict[str, str] = {}
     for content_type in CONTENT_TYPES:
         match = re.search( # I'm not *entirely* convinced this works for all emails
-            rf"Content-Type: {content_type};.*?charset=.*?Content-Transfer-Encoding:(.*?)\n\n(.*?)(?=--)",
+            rf"""Content-Type: {content_type};.*?charset="(.*?)"\nContent-Transfer-Encoding:(.*?)\n\n(.*?)(?=--)""",
             raw,
             re.DOTALL,
         )
         if match:
-            encoding = match.group(1).strip()
-            message = match.group(2).strip()
+            charset = match.group(1).lower()
+            encoding = match.group(2).strip()
+            message = match.group(3).strip()
             if encoding == "base64":
-                message = base64.b64decode(message).decode("utf-8")
+                message = base64.b64decode(message).decode(charset)
             elif encoding == "quoted-printable":
-                message = quopri.decodestring(message).decode("utf-8")
+                message = quopri.decodestring(message).decode(charset)
 
             content[content_type] = message
 
