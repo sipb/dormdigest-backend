@@ -9,6 +9,7 @@ from db.db_helpers import row2dict
 from pydantic import BaseModel, ValidationError, validator
 from datetime import date
 import traceback
+from collections import Counter
 
 from utils.email_parser import eat, EmailMissingHeaders
 import configs.server_configs as config # type: ignore
@@ -46,6 +47,37 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
+
+@app.post("/get_event_category_frequency_for_month")
+async def get_event_category_frequency_for_month(req: GetEventsByMonth):
+    '''
+    Given the month and year, return a mapping of:
+    - dates in the month which has at least one event, to
+    - a frequency dictionary mapping tag names to the number of events the tag is used on that day
+    '''
+    with db_operations.session_scope() as session:
+        events = db_operations.get_events_by_month(session,req.month,req.year)
+        events_categories = db_operations.get_event_tags(session,events, convertName=True) #Make sure to get actual category names
+        #print("Event categories",events_categories)
+        event_categories_by_date = {} # Hold the tags used in each day
+        
+        # Sort events in bins of the day they start on,
+        # keeping track of all event categories that are used on that day
+        for (event, event_categories) in zip(events, events_categories):
+            date = event.start_date.strftime("%Y-%m-%d")
+            if date not in event_categories_by_date:
+                event_categories_by_date[date] = event_categories.copy() #Memory safety
+            else:
+                event_categories_by_date[date].extend(event_categories)
+        
+        event_categories_freq_by_date = {} #Hold frequency of tags used on each day
+        for (given_date, day_event_tags) in event_categories_by_date.items():
+            event_categories_freq_by_date[given_date] = Counter(day_event_tags)
+        
+        return {
+            'frequency': event_categories_freq_by_date
+        }
+
 
 @app.post("/get_events_by_month")
 async def get_events_by_month(req: GetEventsByMonth):
