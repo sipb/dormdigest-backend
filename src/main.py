@@ -34,7 +34,7 @@ class EmailModel(BaseModel):
     email: str
     token: str
 
-app = FastAPI()
+app = FastAPI(debug=True)
 
 app.add_middleware(
     CORSMiddleware,
