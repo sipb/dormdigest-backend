@@ -203,9 +203,9 @@ def add_event(session, title, user_id, description, event_tags=[0],\
     event.club_id = club_id
     event.description_html = description_html
     event.location = location
-    event.start_date = start_date
-    event.end_date = end_date
-    event.start_time = start_time
+    event.start_date = start_date if start_date else datetime.today().date() # Default to day received
+    event.end_date = end_date 
+    event.start_time = start_time if start_time else datetime.min.time() # Default to midnight
     event.end_time = end_time
     event.cta_link = cta_link
 
