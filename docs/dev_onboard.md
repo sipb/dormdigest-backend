@@ -29,3 +29,8 @@ Relevant permission bits
   * Then, in the future, when you come back, simply do:
     * `source env/bin/activate`
     * **Note:** If you are using Visual Studio for your code editor, normally it will automatically load in your virtual environment (if found in current working directory) when you run your code. This saves time from having to load and unload your venv each time.
+* Pulling emails from mail scripts
+  * In the initial stages, we're saving all emails that errored out at `mail_scripts/saved` on the dormdigest locker. To retrieve it, first log into Athena and cd into a local directory (one owned by you) folder. Then do:
+    * `rsync -av /mit/dormdigest/mail_scripts/saved/ ./saved/`
+  * To copy it back to your computer, do something like:
+    * `scp -r kerb@athena.dialup.mit.edu:~/dormdigest/mail_scripts/ ./test_emails/`
