@@ -33,4 +33,4 @@ Relevant permission bits
   * In the initial stages, we're saving all emails that errored out at `mail_scripts/saved` on the dormdigest locker. To retrieve it, first log into Athena and cd into a local directory (one owned by you) folder. Then do:
     * `rsync -av /mit/dormdigest/mail_scripts/saved/ ./saved/`
   * To copy it back to your computer, do something like:
-    * `scp -r kerb@athena.dialup.mit.edu:~/dormdigest/mail_scripts/ ./test_emails/`
+    * `scp -r kerb@athena.dialup.mit.edu:~/dormdigest/mail_scripts/saved/ ./test_emails/`
