@@ -1,5 +1,4 @@
-from curses import tparm
-from typing import Any, Optional, Set, List, Tuple
+from typing import Optional, Set, List, Tuple
 from dataclasses import dataclass
 
 import sys
@@ -8,7 +7,6 @@ import re
 import base64
 import quopri
 import html.parser
-import mailparser
 
 from .parser import Parser, ParserChain
 from .time_parser import parse_event_time, EventTime
@@ -172,13 +170,12 @@ class Email:
     def categories(self) -> Set[int]:
         return parse_categories(self.plaintext)
 
-def nibble(header_name: str, header_data: Any, headers_not_found: Optional[list[str]]=None) -> Any:
+def nibble(header: str, pattern: str, raw: str, headers_not_found: Optional[list[str]]=None) -> Optional[str]:
     """Digest a single header from the email
     """
-    if header_data:
-        return header_data
-    if headers_not_found:
-        headers_not_found.append(header_name)
+    search = re.search(pattern, raw)
+    if search: return search.group(1)
+    if headers_not_found: headers_not_found.append(header)
     return None
 
 def parse_date(date: str) -> datetime.datetime:
@@ -194,61 +191,71 @@ def parse_date(date: str) -> datetime.datetime:
 
 def eat(raw) -> Email:
     """Digest a raw email
-    
+
     Raises:
         EmailMissingHeaders: if some headers could not be parsed
     """
-    email = mailparser.parse_from_string(raw)
-    assert(isinstance(email, mailparser.MailParser))
-    
     # keep track of what couldn't be found
     headers_not_found: list[str] = []
 
     # eat it one bite at a time
-    message_id   = nibble(   "Message-ID",      email.message_id,   headers_not_found) # str
-    sent         = nibble(         "Date",      email.date,         headers_not_found) # datetime
-    sender       = nibble(         "From",      email.from_,        headers_not_found) # list[tuple[str]]
-    subject      = nibble(      "Subject",      email.subject,      headers_not_found) # str
-    to           = nibble(         "From",      email.to,           headers_not_found) # list[tuple[str]]
+    message_id   = nibble(   "Message-ID",    r"Message-ID:\s+<(.*?)>",     raw, headers_not_found)
+    date         = nibble(         "Date",          r"Date:\s+(.*?)(?=\n)", raw, headers_not_found)
+    sender       = nibble(         "From",          r"From:\s+(.*?)(?=\n)", raw, headers_not_found)
+    subject      = nibble(      "Subject",       r"Subject:\s+(.*?)(?=\n)", raw, headers_not_found)
+    thread_topic = nibble( "Thread-Topic",  r"Thread-Topic:\s+(.*?)(?=\n)", raw)
+    to           = nibble("X-Original-To", r"X-Original-To:\s+(.*?)(?=\n)", raw)
 
-    
     if headers_not_found:
         headers = ", ".join([repr(header) for header in headers_not_found])
         msg = f"failed to parse: {headers}"
         raise EmailMissingHeaders(msg)
-    
-    #Optional headers 
-    thread_topic = None
-    if "Thread-Topic" in email.headers:
-        thread_topic = email.headers["Thread-Topic"]
-    
+
     # keep my type checker quiet
     assert(message_id is not None)
-    assert(sent is not None)
+    assert(date is not None)
     assert(sender is not None)
     assert(subject is not None)
     assert(to is not None)
 
-    # By default, we fetch the first contact listed into "From:" and "To:"
-    first_sender_name, first_sender_email = sender[0] # Tuple of (name, email)
-    first_to_name, first_to_email = to[0]             # Tuple of (name, email)
+    # parse emails
+    sender_contact = parse_contact(sender)
+    to_contact = parse_contact(to)
+
+    sent = parse_date(date)
     
-    sender_contact, to_contact = None, None
-    
-    # Theoretically, sender's email should always be filled out, but not necessarily to's email
-    sender_contact = parse_contact(first_sender_email)
-    sender_contact.name = first_sender_name
-    
-    if first_to_email:
-        to_contact = parse_contact(first_to_email)
-        to_contact.name = first_to_name
-    
-    content = {}
-    
-    if email.text_plain:
-        content["text/plain"] = email.text_plain[0]
-    if email.text_html:
-        content["text/html"] = email.text_html[0]
+    content: dict[str, str] = {}
+    for content_type in CONTENT_TYPES:
+        match = re.search( # I'm not *entirely* convinced this works for all emails
+            rf"""Content-Type: {content_type};.*?charset="?(.*?)"?\nContent-Transfer-Encoding:(.*?)\n?\n(.*?)(?=--)""",
+            raw,
+            re.DOTALL,
+        )
+        rev_match = re.search(
+            rf"""Content-Transfer-Encoding:(.*?)\nContent-Type: {content_type};.*?charset="?(.*?)"?\n?\n(.*?)(?=--)""",
+            raw,
+            re.DOTALL,
+        )
+        
+        if match or rev_match:
+            if match:
+                charset = match.group(1).lower().replace('"','')
+                encoding = match.group(2).strip()
+                message = match.group(3).strip()
+            else:
+                charset = rev_match.group(2).lower()
+                encoding = rev_match.group(1).strip()
+                message = rev_match.group(3).strip()
+            if encoding == "base64":
+                message = base64.b64decode(message).decode(charset)
+            elif encoding == "quoted-printable":
+                message = quopri.decodestring(message).decode(charset)
+            content[content_type] = message
+
+    if not content:
+        content_types = ", ".join(CONTENT_TYPES)
+        msg = f"failed to parse email body (searched for {content_types})"
+        raise EmailMissingHeaders(msg)
 
     return Email(
         sent=sent,
