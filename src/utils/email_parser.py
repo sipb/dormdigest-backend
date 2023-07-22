@@ -1,12 +1,9 @@
-from curses import tparm
 from typing import Any, Optional, Set, List, Tuple
 from dataclasses import dataclass
 
 import sys
 import datetime
 import re
-import base64
-import quopri
 import html.parser
 import mailparser
 
@@ -101,25 +98,6 @@ _parser_email_address = Parser[EmailAddress](
     r"^(?P<username>[a-zA-Z0-9._%+-]+)@(?P<domain>[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$",
     [str, str],
 )
-_parser_full_email_address = Parser[Contact](
-    Contact,
-    r"^(?P<name>.+)\s+<(?P<email>.+)>$",
-    [_parser_email_address, str],
-)
-
-def parse_contact(text: str) -> Contact:
-    """Parses sender or recipient info
-
-    Raises:
-        EmailMissingHeaders: if text could not be parsed
-    """
-    full_email = _parser_full_email_address(text)
-    if full_email: return full_email
-    plain_email = _parser_email_address(text)
-    if plain_email: return Contact(plain_email)
-
-    msg = f"failed to parse {text!r} as email"
-    raise EmailMissingHeaders(msg)
 
 @dataclass(kw_only=True)
 class Email:
@@ -192,6 +170,8 @@ def parse_date(date: str) -> datetime.datetime:
 
     return sent
 
+ContactsType = list[tuple[str,str]]
+
 def eat(raw) -> Email:
     """Digest a raw email
     
@@ -205,50 +185,57 @@ def eat(raw) -> Email:
     headers_not_found: list[str] = []
 
     # eat it one bite at a time
-    message_id   = nibble(   "Message-ID",      email.message_id,   headers_not_found) # str
-    sent         = nibble(         "Date",      email.date,         headers_not_found) # datetime
-    sender       = nibble(         "From",      email.from_,        headers_not_found) # list[tuple[str]]
-    subject      = nibble(      "Subject",      email.subject,      headers_not_found) # str
-    to           = nibble(         "From",      email.to,           headers_not_found) # list[tuple[str]]
+    message_id: str               = nibble("Message-ID", email.message_id, headers_not_found)
+    sent:       datetime.datetime = nibble(      "Date", email.date,       headers_not_found)
+    sender:     ContactsType      = nibble(      "From", email.from_,      headers_not_found)
+    subject:    str               = nibble(   "Subject", email.subject,    headers_not_found)
+    to:         ContactsType      = nibble(      "From", email.to,         headers_not_found)
 
-    
     if headers_not_found:
         headers = ", ".join([repr(header) for header in headers_not_found])
         msg = f"failed to parse: {headers}"
         raise EmailMissingHeaders(msg)
     
-    #Optional headers 
-    thread_topic = None
-    if "Thread-Topic" in email.headers:
-        thread_topic = email.headers["Thread-Topic"]
+    # optional headers 
+    thread_topic = None if "Thread-Topic" not in email.headers else email.headers["Thread-Topic"]
     
     # keep my type checker quiet
     assert(message_id is not None)
     assert(sent is not None)
-    assert(sender is not None)
     assert(subject is not None)
+    assert(sender is not None)
     assert(to is not None)
 
-    # By default, we fetch the first contact listed into "From:" and "To:"
-    first_sender_name, first_sender_email = sender[0] # Tuple of (name, email)
-    first_to_name, first_to_email = to[0]             # Tuple of (name, email)
+    # by default, we fetch the first contact listed in "From:" and "To:"
+    first_sender_name, first_sender_email = sender[0] # (name, email)
+    first_to_name, first_to_email = to[0]             # (name, email)
     
-    sender_contact, to_contact = None, None
+    # theoretically, sender's email should always be filled out, but not necessarily to's email
+    # if the To spot is empty, `first_to_email` is an empty string
+    sender_contact = Contact(_parser_email_address(first_sender_email), first_sender_name)
+    to_contact = None
+    if first_to_name or first_to_email:
+        to_contact = Contact(_parser_email_address(first_to_email), first_to_name)
     
-    # Theoretically, sender's email should always be filled out, but not necessarily to's email
-    sender_contact = parse_contact(first_sender_email)
-    sender_contact.name = first_sender_name
-    
-    if first_to_email:
-        to_contact = parse_contact(first_to_email)
-        to_contact.name = first_to_name
-    
+    # parse email body, and process inserted images
     content = {}
     
     if email.text_plain:
         content["text/plain"] = email.text_plain[0]
+        for attachment in email.attachments:
+            if cid := attachment["content-id"]:
+                before = f"[cid:{cid}]"
+                after = ""
+                content["text/plain"] = content["text/plain"].replace(before, after)
+
     if email.text_html:
         content["text/html"] = email.text_html[0]
+        for attachment in email.attachments:
+            if cid := attachment["content-id"]:
+                cte = attachment.get("content_transfer_encoding") or "base64"
+                before = f'src="cid:{cid}"'
+                after = f'''src="data:{attachment["mail_content_type"]};{cte}, {attachment["payload"]}"'''
+                content["text/html"] = content["text/html"].replace(before, after)
 
     return Email(
         sent=sent,
