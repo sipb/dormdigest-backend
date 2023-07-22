@@ -81,8 +81,10 @@ _date_formatters = {
 
 def format_date(parsed: Date, *, today: datetime.date=TODAY) -> datetime.date:
     date = _date_formatters[type(parsed)](parsed, today=today)
-    if date < today: date = date.replace(year=date.year+1)
-    return date
+    # assume that the event date's year is the one that's closest to `today`
+    # this may overwrite the year annotated in the email if it's provided
+    possible_dates = [date.replace(year=date.year+offset) for offset in (-1, 0, 1)]
+    return min(possible_dates, key=lambda dt: abs(dt - today).total_seconds())
 
 DATE_PARSER_CHAIN = ParserChain[Date, datetime.date](
     [

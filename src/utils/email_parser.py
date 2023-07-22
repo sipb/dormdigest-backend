@@ -1,12 +1,9 @@
-from curses import tparm
 from typing import Any, Optional, Set, List, Tuple
 from dataclasses import dataclass
 
 import sys
 import datetime
 import re
-import base64
-import quopri
 import html.parser
 import mailparser
 
