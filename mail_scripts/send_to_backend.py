@@ -44,7 +44,9 @@ def pass_to_api(email):
 
   try:
     response = request.urlopen(req)
-    if response.status in (200, 201): return
+    if response.status in (200, 201):
+      save_last_email(email)
+      return
   except error.HTTPError as e:
     send_error_to_mattermost(e)
 

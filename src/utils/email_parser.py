@@ -223,7 +223,7 @@ def eat(raw) -> Email:
     if email.text_plain:
         content["text/plain"] = email.text_plain[0]
         for attachment in email.attachments:
-            if cid := attachment["content-id"]:
+            if cid := attachment["content-id"].strip("<>"):
                 before = f"[cid:{cid}]"
                 after = ""
                 content["text/plain"] = content["text/plain"].replace(before, after)
@@ -231,7 +231,7 @@ def eat(raw) -> Email:
     if email.text_html:
         content["text/html"] = email.text_html[0]
         for attachment in email.attachments:
-            if cid := attachment["content-id"]:
+            if cid := attachment["content-id"].strip("<>"):
                 cte = attachment.get("content_transfer_encoding") or "base64"
                 before = f'src="cid:{cid}"'
                 after = f'''src="data:{attachment["mail_content_type"]};{cte}, {attachment["payload"]}"'''
