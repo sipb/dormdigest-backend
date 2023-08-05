@@ -137,7 +137,7 @@ async def digest(req: EmailModel):
 
             event_id = db_operations.add_event(
                 session,
-                parsed.thread_topic,
+                parsed.thread_topic or parsed.subject,
                 user_id,
                 parsed.plaintext,
                 parsed.categories,

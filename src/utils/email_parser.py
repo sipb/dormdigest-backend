@@ -155,7 +155,7 @@ def nibble(header_name: str, header_data: Any, headers_not_found: Optional[list[
     """
     if header_data:
         return header_data
-    if headers_not_found:
+    if headers_not_found is not None:
         headers_not_found.append(header_name)
     return None
 
@@ -189,7 +189,7 @@ def eat(raw) -> Email:
     sent:       datetime.datetime = nibble(      "Date", email.date,       headers_not_found)
     sender:     ContactsType      = nibble(      "From", email.from_,      headers_not_found)
     subject:    str               = nibble(   "Subject", email.subject,    headers_not_found)
-    to:         ContactsType      = nibble(      "From", email.to,         headers_not_found)
+    to:         ContactsType      = nibble(        "To", email.to)
 
     if headers_not_found:
         headers = ", ".join([repr(header) for header in headers_not_found])
@@ -204,11 +204,11 @@ def eat(raw) -> Email:
     assert(sent is not None)
     assert(subject is not None)
     assert(sender is not None)
-    assert(to is not None)
 
     # by default, we fetch the first contact listed in "From:" and "To:"
     first_sender_name, first_sender_email = sender[0] # (name, email)
-    first_to_name, first_to_email = to[0]             # (name, email)
+    first_to_name, first_to_email = None, None
+    if to is not None: first_to_name, first_to_email = to[0]
     
     # theoretically, sender's email should always be filled out, but not necessarily to's email
     # if the To spot is empty, `first_to_email` is an empty string
