@@ -1,6 +1,5 @@
 from ast import In
 import datetime
-from sqlalchemy_utils import database_exists
 
 import configs.creds as creds
 import enum
