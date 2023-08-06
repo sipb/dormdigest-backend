@@ -41,7 +41,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_headers=["*"],
     allow_methods=["*"],
-    allow_origins=["http://localhost:3000","localhost","localhost:3000","https://dormdigest.xvm.mit.edu"]
+    allow_origins=["http://localhost:3000","https://localhost:3000","https://dormdigest.xvm.mit.edu"]
 )
 
 @app.get("/")
@@ -141,7 +141,7 @@ async def digest(req: EmailModel):
                 user_id,
                 parsed.plaintext,
                 parsed.categories,
-                parsed.when.start_date,
+                parsed.when.start_date or parsed.sent.date(),
                 parsed.when.end_date,
                 parsed.when.start_time,
                 parsed.when.end_time,

@@ -13,7 +13,7 @@ from .location_parser import parse_locations
 from .category_parser import parse_categories
 
 # pattern that determines if it's a dormspam or not
-DORMSPAM_PATTERN = r"\bbcc'?e?d\s+to\s+(all\s+)?dorms[;,.]?\s+(\w+)\s+for bc-talk\b"
+DORMSPAM_PATTERN = r"\b[bB]cc['-]?e?d\s+to\s+(all\s+)?(dorms|dormspam)[;,.]?\s+([\s\w-]+)\s+for bc-talk\b"
 DORMSPAM_PATTERN_COLOR_GROUP = 2
 
 # supported email content types

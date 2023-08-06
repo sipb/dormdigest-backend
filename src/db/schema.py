@@ -17,6 +17,12 @@ SQL_URL = "mysql+mysqlconnector://%s:%s@sql.mit.edu/%s?charset=utf8" % (
     creds.user, creds.password, DATABASE_NAME
 )
 
+# 08-05-2023: We've been having issues with Scripts MySQL server, so let's create a local
+#             SQLite3 database for now.
+# (TODO): Get Scripts MySQL working with large packet size (> 1 MB)
+
+SQL_URL = 'sqlite:///dormdigest-prod.db' # Local directory
+
 #Defines length (in characters) of common data types
 
 EMAIL_LENGTH = 64
@@ -45,9 +51,6 @@ class EventType(enum.Enum):
 SQLBase = sqlalchemy.ext.declarative.declarative_base()
 sqlengine = sqlalchemy.create_engine(SQL_URL,pool_recycle=600,pool_pre_ping=True)
 SQLBase.metadata.bind = sqlengine
-
-# Implement schema
-SQLBase.metadata.create_all(sqlengine)
 
 # Main primitives
 class Event(SQLBase):
@@ -196,3 +199,6 @@ class EventEmail(SQLBase): #Map event email to parsed Event entry
         self.event_id = event_id
         self.message_id = message_id
         self.in_reply_to = in_reply_to
+
+# Implement schema
+SQLBase.metadata.create_all(sqlengine)
