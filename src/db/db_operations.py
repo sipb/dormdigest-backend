@@ -6,7 +6,8 @@ from datetime import timedelta, datetime
 from contextlib import contextmanager
 from db.db_helpers import *
 from db.schema import \
-    Event, EventTag, User, Club, ClubMembership, EventEmail, sqlengine
+    Event, EventDescription, EventTag, User, Club, ClubMembership, EventDescriptionType, \
+    EMAIL_DESCRIPTION_CHUNK_SIZE, sqlengine
 from utils.category_parser import parse_tags
 import db.schema as schema
 import calendar
@@ -75,7 +76,7 @@ def get_all_events(session):
     '''Get information of all of events in database'''
     return session.query(Event).all()
 
-def get_events_by_date(session, from_date, include_description=False):
+def get_events_by_date(session, from_date):
     '''
     Get all events happening on a given day,
     ordered by start time and event name
@@ -89,9 +90,6 @@ def get_events_by_date(session, from_date, include_description=False):
         ).order_by(
             Event.start_date, Event.start_time, Event.title
         )
-    if include_description:
-        # Include the description and description_html fields
-        query = query.options(sqlalchemy.orm.undefer_group("full_description"))
     events = query.all()
     return events
 
@@ -151,6 +149,31 @@ def get_event_user_emails(session, events):
             res.append("unknown_user") # Default "unknown_user" is failsafe in case we misadd a user
     return res
 
+def get_event_description(session, event_id, description_type):
+    """
+    Get the event description of either plaintext or html type
+    corresponding to a single event
+    
+    Requirements:
+        - `description_type` is EventDescriptionType enum
+    """
+    description_chunks = session.query(EventDescription).filter(
+            EventDescription.event_id == event_id,
+            EventDescription.content_type == description_type.value
+    ).order_by(
+            EventDescription.content_index
+    ).all()
+    full_description = "".join([chunk.data for chunk in description_chunks])
+    return full_description
+
+def get_event_descriptions(session, events, description_type):
+    '''
+    Given a list of Event models, return a list of either plaintext or html
+    description of each event (where type is determined by `description_type`)
+    '''
+    res = [get_event_description(session, event.id, description_type) for event in events]
+    return res
+
 ## Add Functions
 def add_to_db(session, obj, others=None,rollbackfunc=None):
     """Adds objects to database with re-trials
@@ -198,10 +221,9 @@ def add_event(session, title, user_id, description, event_tags=[0],\
     #Required fields
     event.title = title
     event.user_id = user_id
-    event.description = description
+    
     #Optional Fields
     event.club_id = club_id
-    event.description_html = description_html
     event.location = location
     event.start_date = start_date if start_date else datetime.today().date() # Default to day received
     event.end_date = end_date 
@@ -213,6 +235,7 @@ def add_event(session, title, user_id, description, event_tags=[0],\
     if committed:
         session.flush()
         add_event_tags(session, event.id,event_tags)
+        add_event_description(session, event.id, description, description_html)
         return event.id
     return None
 
@@ -296,17 +319,35 @@ def add_club_member(session, club_id,user_id,member_privilege=0):
     new_membership = ClubMembership(user_id,club_id,member_privilege)
     add_to_db(session, new_membership)
     
-def add_event_email(session,event_id,message_id,in_reply_to):
-    '''
-    Add email header metadata for a given event with `event_id` 
-    Requires event_id to be a valid Event ID.
+def add_event_description(session, event_id, description_plaintext, description_html):
+    """
+    Add an event email description (its plaintext and/or html version)
+    to the database
     
-    Assumes that there is no entry in the EventEmail table
-    for this `event_id` already
-    '''
-    event_email = EventEmail(event_id,message_id,in_reply_to)
-    add_to_db(session, event_email)
+    Entries will be segmented based on type (plain vs html) and size (due 
+    to limitations with max packet sizes in the SQL database).
+    
+    If one of the descriptions provided is None, the database will store 
+    an empty string in its place.
+    """
+    
+    def add_event_description_helper(description_type, data):
+        """
+        Add event description of a given description type to database.
+        Divide the data into multiple entries as needed.
+        """
+        chunked_data = [data[i:i+EMAIL_DESCRIPTION_CHUNK_SIZE] for i in range(0, len(data), EMAIL_DESCRIPTION_CHUNK_SIZE)]
+        for chunk_index, chunk_data in enumerate(chunked_data):
+            description = EventDescription(event_id, description_type.value, chunk_index, chunk_data)
+            session.add(description)
 
+    plaintext_to_add = description_plaintext or ""
+    add_event_description_helper(EventDescriptionType.PLAINTEXT, plaintext_to_add)
+
+    html_to_add = description_html or ""
+    add_event_description_helper(EventDescriptionType.HTML, html_to_add)
+    session.commit()
+    
 ## Update functions
 
 def update_event_description(session, event_id, description, description_html):

@@ -21,7 +21,7 @@ SQL_URL = "mysql+mysqlconnector://%s:%s@sql.mit.edu/%s?charset=utf8" % (
 #             SQLite3 database for now.
 # (TODO): Get Scripts MySQL working with large packet size (> 1 MB)
 
-SQL_URL = 'sqlite:///dormdigest-prod.db' # Local directory
+# SQL_URL = 'sqlite:///dormdigest-prod.db' # Local directory
 
 #Defines length (in characters) of common data types
 
@@ -31,6 +31,7 @@ EMAIL_IN_REPLY_TO = 512
 EVENT_LINK_LENGTH = 512
 CLUB_NAME_LENGTH = 128
 CLUB_NAME_ABBREV_LENGTH = 32
+EMAIL_DESCRIPTION_CHUNK_SIZE = 500000 # bytes
 
 class UserPrivilege(enum.Enum):
     NORMAL = 0 #Default
@@ -40,8 +41,10 @@ class MemberPrivilege(enum.Enum):
     NORMAL = 0 #Default
     OFFICER = 1
     
-class EventType(enum.Enum):
-    unknown = 0 
+class EventDescriptionType(enum.Enum):
+    PLAINTEXT = 0
+    HTML = 1
+
 
 ##############################################################
 # Setup Stages
@@ -68,8 +71,10 @@ class Event(SQLBase):
     club = relationship("Club")
     
     location = Column(String(128), default="")
-    description = deferred(Column(Text, default=""), group="full_description")
-    description_html = deferred(Column(Text, default=""), group="full_description")
+    
+    # Note: Descriptions are stored in EventDescription
+    # description = deferred(Column(Text, default=""), group="full_description")
+    # description_html = deferred(Column(Text, default=""), group="full_description")
 
     tags = relationship('EventTag', backref='Event', lazy='dynamic')
 
@@ -188,17 +193,20 @@ class EventTag(SQLBase): #Map event to tags it is associated with
     def get_tag_value(self):
         return self.event_tag
 
-class EventEmail(SQLBase): #Map event email to parsed Event entry
-    __tablename__ = "event_emails"
-    event_id = Column(Integer, ForeignKey("events.id"),primary_key=True, unique=True)
-    message_id = Column(String(EMAIL_MESSAGE_ID_LENGTH), nullable=False, unique=True)
-    in_reply_to = Column(String(EMAIL_IN_REPLY_TO),nullable=False)
-    event = relationship("Event")
+class EventDescription(SQLBase): # Contain email description content for a specific Event
+    __tablename__ = "event_descriptions"
+    id = Column(Integer, primary_key=True,unique=True, autoincrement=True)
+    event_id = Column(Integer, ForeignKey("events.id"))
+    content_type = Column(Integer) # Enum value denoting plaintext or html
+    content_index = Column(Integer) # For maintain ordering of text
+    data = Column(Text, default="") # When storing, need to be < 1 MB to avoid  
+                                    # SQL max_allowed_packet limits
     
-    def __init__(self,event_id, message_id,in_reply_to):
+    def __init__(self, event_id, content_type, content_index, data):
         self.event_id = event_id
-        self.message_id = message_id
-        self.in_reply_to = in_reply_to
+        self.content_type = content_type
+        self.content_index = content_index
+        self.data = data
 
 # Implement schema
 SQLBase.metadata.create_all(sqlengine)
