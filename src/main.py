@@ -1,10 +1,15 @@
+from xml.etree.ElementInclude import include
 from fastapi import (
     FastAPI,
     status, HTTPException,
 )
+
+from fastapi_cache import FastAPICache
 from fastapi.middleware.cors import CORSMiddleware
+
 import uvicorn
 import db.db_operations as db_operations
+import db.schema as schema
 from db.db_helpers import row2dict
 from pydantic import BaseModel, ValidationError, validator
 from datetime import date
@@ -94,14 +99,22 @@ async def get_events_by_month(req: GetEventsByMonth):
 @app.post("/get_events_by_date")
 async def get_events_by_date(req: GetEventsByDate):
     with db_operations.session_scope() as session:
-        events = db_operations.get_events_by_date(session,req.from_date,req.include_description)
+        events = db_operations.get_events_by_date(session,req.from_date)
         tags = db_operations.get_event_tags(session,events)
         users = db_operations.get_event_user_emails(session,events)
-        return {
+        res = {        
             'events': row2dict(events),
             'tags': tags,
-            'users': users
+            'users': users,
         }
+        
+        if req.include_description:
+            descriptions = db_operations.get_event_descriptions(session,events,schema.EventDescriptionType.PLAINTEXT)
+            descriptions_html = db_operations.get_event_descriptions(session,events,schema.EventDescriptionType.HTML)
+
+            res['descriptions'] = descriptions
+            res['descriptions_html'] = descriptions_html
+        return res
 
 @app.post("/eat", status_code=status.HTTP_201_CREATED)
 async def digest(req: EmailModel):

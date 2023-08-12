@@ -13,7 +13,7 @@ from .location_parser import parse_locations
 from .category_parser import parse_categories
 
 # pattern that determines if it's a dormspam or not
-DORMSPAM_PATTERN = r"\b[bB]cc['-]?e?d\s+to\s+(all\s+)?(dorms|dormspam)[;,.]?\s+([\s\w-]+)\s+for bc-talk\b"
+DORMSPAM_PATTERN = r"\b[bB]cc[’'`-]?e?d\s+to\s+(all\s+)?(?:dorms|dormspam)[;,.]?\s+([\*\s\w-]+)\s+for bc-talk\b"
 DORMSPAM_PATTERN_COLOR_GROUP = 2
 
 # supported email content types
@@ -135,7 +135,8 @@ class Email:
     @property
     def color(self) -> Optional[str]:
         search = re.search(DORMSPAM_PATTERN, self.plaintext, flags=re.IGNORECASE)
-        if search: return search.group(DORMSPAM_PATTERN_COLOR_GROUP)
+        if search: 
+            return search.group(DORMSPAM_PATTERN_COLOR_GROUP)
         return None
 
     @property
