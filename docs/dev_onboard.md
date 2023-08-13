@@ -34,3 +34,12 @@ Relevant permission bits
     * `rsync -av /mit/dormdigest/mail_scripts/saved/ ./saved/`
   * To copy it back to your computer, do something like:
     * `scp -r kerb@athena.dialup.mit.edu:~/dormdigest/mail_scripts/saved/ ./test_emails/`
+* Pushing frontend build to XVM
+  * Because XVM doesn't support node 18 properly, whenever you want to run a new build in production, you will need to build it locally with `npm run build` and then secure copy the build files onto the server. An example command is:
+  * `scp -r ~/Documents/SIPB/dormdigest-frontend/build/* root@dormdigest.xvm.mit.edu:/home/dorm/dormdigest-frontend/build/`
+* (NOT BEING USED) Setup Postgres database
+  * `sudo apt install postgresql postgresql-contrib`
+  * `sudo -u postgres psql`
+  * `CREATE DATABASE dormdigest_prod;`
+* To run the frontend static files server, do:
+  * `http-server -S -C /etc/letsencrypt/live/dormdigest.xvm.mit.edu/fullchain.pem -K /etc/letsencrypt/live/dormdigest.xvm.mit.edu/privkey.pem -p 443 ./build -- & > server_log.txt`
