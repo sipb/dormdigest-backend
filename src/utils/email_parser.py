@@ -7,6 +7,11 @@ import re
 import html.parser
 import mailparser
 
+# Image processing
+from PIL import Image
+from io import BytesIO
+import base64
+
 from .parser import Parser, ParserChain
 from .time_parser import parse_event_time, EventTime
 from .location_parser import parse_locations
@@ -21,6 +26,28 @@ CONTENT_TYPES = (
     "text/plain",
     "text/html",
 )
+
+# Compressing images
+COMPRESSED_IMAGE_WIDTH = 350 # pixels
+
+def compress_image(original_image: str) -> str:
+    '''
+    Given a base64 encoding of an image, resize the image such that it is 500 x * pixels in size 
+    (keeping aspect ratio), and compress it using Pillow's `optimize` and `quality` flags.
+    
+    Returns base64 encoding of new image as PNG format
+    '''
+    output_buffer = BytesIO() # Store the result
+    img = Image.open(BytesIO(base64.b64decode(original_image)))
+    #Calculate new image size
+    wpercent = (COMPRESSED_IMAGE_WIDTH/float(img.size[0]))
+    hsize = int((float(img.size[1])*float(wpercent)))
+    # Resize the image
+    img = img.resize((COMPRESSED_IMAGE_WIDTH,hsize), Image.Resampling.LANCZOS)
+    # Optimize image for file size
+    img.save(output_buffer, optimize=True, quality=80, format='PNG')
+    output_buffer.seek(0)
+    return base64.b64encode(output_buffer.read()).decode('utf-8')
 
 # raised when the email could not be parsed
 class EmailMissingHeaders(Exception): pass
@@ -235,7 +262,9 @@ def eat(raw) -> Email:
             if cid := attachment["content-id"].strip("<>"):
                 cte = attachment.get("content_transfer_encoding") or "base64"
                 before = f'src="cid:{cid}"'
-                after = f'''src="data:{attachment["mail_content_type"]};{cte}, {attachment["payload"]}"'''
+                payload_fixed = attachment["payload"].replace("\n","")
+                payload_compressed = compress_image(payload_fixed)
+                after = f'''src="data:img/png;{cte},{payload_compressed}"'''
                 content["text/html"] = content["text/html"].replace(before, after)
 
     return Email(
