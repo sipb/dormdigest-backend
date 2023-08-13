@@ -21,7 +21,7 @@ SQL_URL = "mysql+mysqlconnector://%s:%s@sql.mit.edu/%s?charset=utf8" % (
 #             SQLite3 database for now.
 # (TODO): Get Scripts MySQL working with large packet size (> 1 MB)
 
-# SQL_URL = 'sqlite:///dormdigest-prod.db' # Local directory
+SQL_URL = 'sqlite:///dormdigest-prod.db' # Local directory
 
 #Defines length (in characters) of common data types
 
@@ -31,7 +31,7 @@ EMAIL_IN_REPLY_TO = 512
 EVENT_LINK_LENGTH = 512
 CLUB_NAME_LENGTH = 128
 CLUB_NAME_ABBREV_LENGTH = 32
-EMAIL_DESCRIPTION_CHUNK_SIZE = 500000 # bytes
+EMAIL_DESCRIPTION_CHUNK_SIZE = 65000 # bytes
 
 class UserPrivilege(enum.Enum):
     NORMAL = 0 #Default
@@ -199,8 +199,8 @@ class EventDescription(SQLBase): # Contain email description content for a speci
     event_id = Column(Integer, ForeignKey("events.id"))
     content_type = Column(Integer) # Enum value denoting plaintext or html
     content_index = Column(Integer) # For maintain ordering of text
-    data = Column(Text, default="") # When storing, need to be < 1 MB to avoid  
-                                    # SQL max_allowed_packet limits
+    data = Column(String(EMAIL_DESCRIPTION_CHUNK_SIZE), default="") # When storing, need to be < 1 MB to avoid  
+                                                                    # SQL max_allowed_packet limits
     
     def __init__(self, event_id, content_type, content_index, data):
         self.event_id = event_id
