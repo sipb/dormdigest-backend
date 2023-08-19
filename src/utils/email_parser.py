@@ -176,7 +176,8 @@ class Email:
 
     @property
     def categories(self) -> Set[int]:
-        return parse_categories(self.plaintext)
+        text = f"{self.thread_topic or self.subject}\n\n{self.plaintext}"
+        return parse_categories(text)
 
 def nibble(header_name: str, header_data: Any, headers_not_found: Optional[list[str]]=None) -> Any:
     """Digest a single header from the email

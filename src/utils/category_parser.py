@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Optional, Set
+import re
 
 @dataclass
 class Category:
@@ -71,6 +72,14 @@ TALKS = Category(
    "Talks, workshops, short classes."
 )
 
+SALE = Category(
+   [
+      "sale", "selling", 
+   ],
+   "SALE",
+   "Selling things, senior sales."
+)
+
 # as they're stored in the database
 CATEGORIES = [
    OTHER,
@@ -81,22 +90,26 @@ CATEGORIES = [
    PERFORMANCE,
    BOBA,
    TALKS,
+   SALE,
 ]
 
 def parse_categories(text: str) -> Set[int]:
-   """Early iteration of a category parser
+   """An iteration of a category parser
 
    Returns a set of ``int``s, because the database stores category information
    as such.
 
    Args:
-        text: The body of text to search for locations.
+      text: The body of text to search for locations.
    """
-   text = text.lower()
-   categories = set(
-      i for i, category in enumerate(CATEGORIES)
-      if any(keyword.lower() in text for keyword in category.keywords)
-   )
+   categories = set()
+   for i, category in enumerate(CATEGORIES):
+      for keyword in category.keywords:
+         pattern = fr"\b{re.escape(keyword)}\b"
+         match = re.search(pattern, text, re.IGNORECASE)
+         if match:
+            categories.add(i)
+            break
 
    return categories
 
@@ -106,7 +119,7 @@ def parse_tags(tags: list[int]) -> list[str]:
    Return a list of unique category names
    
    Args:
-         tags: The list of tags associated with an event/events
+      tags: The list of tags associated with an event/events
    """
-   categoryNames = [CATEGORIES[tag].name for tag in tags]
-   return categoryNames
+   category_names = [CATEGORIES[tag].name for tag in tags]
+   return category_names
