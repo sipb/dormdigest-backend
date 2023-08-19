@@ -28,7 +28,7 @@ CONTENT_TYPES = (
 )
 
 # Compressing images
-COMPRESSED_IMAGE_WIDTH = 350 # pixels
+COMPRESSED_IMAGE_WIDTH = 500 # pixels
 
 def compress_image(original_image: str) -> str:
     '''
