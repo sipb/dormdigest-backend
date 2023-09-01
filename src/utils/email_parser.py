@@ -28,7 +28,7 @@ CONTENT_TYPES = (
 )
 
 # Compressing images
-COMPRESSED_IMAGE_WIDTH = 500 # pixels
+COMPRESSED_IMAGE_WIDTH = 600 # pixels
 
 def compress_image(original_image: str) -> str:
     '''
@@ -265,7 +265,7 @@ def eat(raw) -> Email:
                 before = f'src="cid:{cid}"'
                 payload_fixed = attachment["payload"].replace("\n","")
                 payload_compressed = compress_image(payload_fixed)
-                after = f'''src="data:img/png;{cte},{payload_compressed}"'''
+                after = f'''src="data:image/png;{cte},{payload_compressed}"'''
                 content["text/html"] = content["text/html"].replace(before, after)
 
     return Email(
