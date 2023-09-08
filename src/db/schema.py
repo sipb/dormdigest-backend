@@ -32,6 +32,7 @@ EVENT_LINK_LENGTH = 512
 CLUB_NAME_LENGTH = 128
 CLUB_NAME_ABBREV_LENGTH = 32
 EMAIL_DESCRIPTION_CHUNK_SIZE = 65000 # bytes
+SESSION_ID_LENGTH = 32
 
 class UserPrivilege(enum.Enum):
     NORMAL = 0 #Default
@@ -207,6 +208,17 @@ class EventDescription(SQLBase): # Contain email description content for a speci
         self.content_type = content_type
         self.content_index = content_index
         self.data = data
+
+class SessionId(SQLBase): # keep track of valid session ids
+    __tablename__ = "session_ids"
+    id = Column(Integer, primary_key=True,unique=True, autoincrement=True)
+    session_id = Column(String(SESSION_ID_LENGTH), nullable=False)
+    email_addr = Column(String(EMAIL_LENGTH), unique=False, nullable=False)
+    date_created = Column(DateTime, default=datetime.datetime.now)
+
+    def __init__(self, session_id, email_addr):
+        self.session_id = session_id
+        self.email_addr = email_addr
 
 # Implement schema
 SQLBase.metadata.create_all(sqlengine)
