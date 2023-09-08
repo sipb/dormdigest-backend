@@ -7,10 +7,11 @@ from contextlib import contextmanager
 from db.db_helpers import *
 from db.schema import \
     Event, EventDescription, EventTag, User, Club, ClubMembership, EventDescriptionType, \
-    EMAIL_DESCRIPTION_CHUNK_SIZE, sqlengine
+    EMAIL_DESCRIPTION_CHUNK_SIZE, sqlengine, SessionId, SESSION_ID_LENGTH
 from utils.category_parser import parse_tags
 import db.schema as schema
 import calendar
+from auth.auth_helpers import generate_API_token
 
 MAX_COMMIT_RETRIES = 10
 
@@ -70,6 +71,19 @@ def has_edit_permission(session, user_id, event_id):
         ).first() is not None
     return is_officer
 
+def validate_session_id(session, email_addr, session_id):
+    """
+    Confirm that the user has a valid login session
+
+    Todo:
+        Check to make sure the session isn't super old (e.g. 7 days)
+    """
+    session_id = session.query(SessionId).filter(
+        SessionId.email_addr==email_addr,
+        SessionId.session_id==session_id,
+    ).first()
+    
+    return bool(session_id)
 
 ## Get Functions
 def get_all_events(session):
@@ -347,6 +361,20 @@ def add_event_description(session, event_id, description_plaintext, description_
     html_to_add = description_html or ""
     add_event_description_helper(EventDescriptionType.HTML, html_to_add)
     session.commit()
+
+def add_session_id(session, email_addr):
+    """
+    Add a new session id to the database for a user login.
+
+    Note that the `session` arg is the database session, not to be confused
+    """
+    token = generate_API_token(length=SESSION_ID_LENGTH)
+    new_session_id = SessionId(token, email_addr)
+    committed = add_to_db(session, new_session_id)
+    if committed:
+        session.flush()
+        return new_session_id.session_id
+    return None
     
 ## Update functions
 

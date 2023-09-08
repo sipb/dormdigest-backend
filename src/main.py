@@ -4,7 +4,7 @@ from fastapi import (
     status, HTTPException,
 )
 
-from fastapi_cache import FastAPICache
+#from fastapi_cache import FastAPICache
 from fastapi.middleware.cors import CORSMiddleware
 
 import uvicorn
@@ -21,9 +21,19 @@ import configs.server_configs as config # type: ignore
 from configs.creds import valid_API_tokens
 
 ## Request Models
+class NewAuthModel(BaseModel):
+    email_addr: str
+    token: str
+
+class AuthModel(BaseModel):
+    email_addr: str
+    session_id: str
+
 class GetEventsByMonth(BaseModel):
     month: int
     year: int | None = None
+
+    auth: AuthModel
     
     @validator('month')
     def is_valid_month(cls, v):
@@ -34,6 +44,8 @@ class GetEventsByMonth(BaseModel):
 class GetEventsByDate(BaseModel):
     from_date: date
     include_description: bool | None = False
+
+    auth: AuthModel
 
 class EmailModel(BaseModel):
     email: str
@@ -61,6 +73,14 @@ async def get_event_category_frequency_for_month(req: GetEventsByMonth):
     - a frequency dictionary mapping tag names to the number of events the tag is used on that day
     '''
     with db_operations.session_scope() as session:
+        # validate that user has logged in
+        is_valid = db_operations.validate_session_id(session, req.auth.email_addr, req.auth.session_id)
+        if not is_valid:
+            res = {
+                "frequency": {}
+            }
+            return res
+
         events = db_operations.get_events_by_month(session,req.month,req.year)
         events_categories = db_operations.get_event_tags(session,events, convertName=True) #Make sure to get actual category names
         #print("Event categories",events_categories)
@@ -87,6 +107,16 @@ async def get_event_category_frequency_for_month(req: GetEventsByMonth):
 @app.post("/get_events_by_month")
 async def get_events_by_month(req: GetEventsByMonth):
     with db_operations.session_scope() as session:
+        # validate that user has logged in
+        is_valid = db_operations.validate_session_id(session, req.auth.email_addr, req.auth.session_id)
+        if not is_valid:
+            res = {
+                "events": [],
+                "tags": [],
+                "users": [],
+            }
+            return res
+
         events = db_operations.get_events_by_month(session,req.month,req.year)
         tags = db_operations.get_event_tags(session,events)
         users = db_operations.get_event_user_emails(session,events)
@@ -99,6 +129,19 @@ async def get_events_by_month(req: GetEventsByMonth):
 @app.post("/get_events_by_date")
 async def get_events_by_date(req: GetEventsByDate):
     with db_operations.session_scope() as session:
+        # validate that user has logged in
+        is_valid = db_operations.validate_session_id(session, req.auth.email_addr, req.auth.session_id)
+        if not is_valid:
+            res = {
+                "events": [],
+                "tags": [],
+                "users": [],
+            }
+            if req.include_description:
+                res["descriptions"] = []
+                res["descriptions_html"] = []
+            return res
+
         events = db_operations.get_events_by_date(session,req.from_date)
         tags = db_operations.get_event_tags(session,events)
         users = db_operations.get_event_user_emails(session,events)
@@ -163,6 +206,20 @@ async def digest(req: EmailModel):
                 location,
                 link,
             )
+
+@app.post("/create_session", status_code=status.HTTP_201_CREATED)
+async def create_session(req: NewAuthModel):
+    if req.token not in valid_API_tokens:
+        msg = f"unrecognized token {req.token!r}"
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=msg,
+        )
+
+    with db_operations.session_scope() as session:
+        session_id = db_operations.add_session_id(session, req.email_addr)
+        res = {"session_id": session_id}
+        return res
 
 if __name__ == '__main__':
     uvicorn.run("main:app",
