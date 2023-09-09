@@ -13,6 +13,12 @@ import db.schema as schema
 import calendar
 from auth.auth_helpers import generate_API_token
 
+from redis import StrictRedis
+from redis_cache import RedisCache
+
+client = StrictRedis(host="redis", decode_responses=True)
+cache = RedisCache(redis_client=client)
+
 MAX_COMMIT_RETRIES = 10
 
 # Set up SQLachemy sesion factory
@@ -71,6 +77,7 @@ def has_edit_permission(session, user_id, event_id):
         ).first() is not None
     return is_officer
 
+@cache.cache(ttl=3600, limit=100)
 def validate_session_id(session, email_addr, session_id):
     """
     Confirm that the user has a valid login session
@@ -133,6 +140,7 @@ def get_events_by_month(session, month,year=None):
     events = query.all()
     return events
 
+@cache.cache(ttl=86400, limit=512)
 def get_event_tags(session, events, convertName=False):
     '''
     Given a list of Event models, return a list of all tags associated with each event
@@ -180,6 +188,7 @@ def get_event_description(session, event_id, description_type):
     full_description = "".join([chunk.data for chunk in description_chunks])
     return full_description
 
+@cache.cache(ttl=86400, limit=512)
 def get_event_descriptions(session, events, description_type):
     '''
     Given a list of Event models, return a list of either plaintext or html
