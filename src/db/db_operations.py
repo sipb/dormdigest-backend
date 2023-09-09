@@ -150,7 +150,7 @@ def get_event_tags(session, events, convertName=False):
     
     If `convertToName` is True, tag number will be converted to the category name.
     '''
-    @cache.cache(ttl=86400, limit=512)
+    @cache.cache(limit=1024)
     def get_event_tags_helper(event_ids, convertName):
         res = []
         for event in events:
@@ -162,7 +162,7 @@ def get_event_tags(session, events, convertName=False):
             else:
                 res.append(event_tags)
         return res
-    event_ids = [event.id for event in events] #Make events list serializable 
+    event_ids = set([event.id for event in events]) #Make events list serializable 
     return get_event_tags_helper(event_ids, convertName)
 
 def get_event_user_emails(session, events):
@@ -187,7 +187,7 @@ def get_event_description(session, event_id, description_type):
     Requirements:
         - `description_type` is EventDescriptionType enum
     """
-    @cache.cache(ttl=86400, limit=1024)
+    @cache.cache(limit=1024)
     def get_event_description_helper(event_id, description_type_value):
         description_chunks = session.query(EventDescription).filter(
                 EventDescription.event_id == event_id,
