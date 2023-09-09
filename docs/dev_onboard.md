@@ -53,7 +53,7 @@ Relevant permission bits
     * `echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list`
     * `sudo apt-get update`
     * `sudo apt-get install redis`
-    * `sudo apt install redis-server`
+    * `sudo systemctl enable redis-server`
   * Verify it's working with:
     * `systemctl status redis`
     * `redis-cli ping` (should get back PONG)
