@@ -77,7 +77,7 @@ def has_edit_permission(session, user_id, event_id):
         ).first() is not None
     return is_officer
 
-@cache.cache(ttl=3600, limit=100)
+
 def validate_session_id(session, email_addr, session_id):
     """
     Confirm that the user has a valid login session
@@ -85,12 +85,15 @@ def validate_session_id(session, email_addr, session_id):
     Todo:
         Check to make sure the session isn't super old (e.g. 7 days)
     """
-    session_id = session.query(SessionId).filter(
-        SessionId.email_addr==email_addr,
-        SessionId.session_id==session_id,
-    ).first()
-    
-    return bool(session_id)
+    @cache.cache(ttl=3600, limit=100)
+    def validate_session_id_helper(email_addr, session_id):
+        session_id = session.query(SessionId).filter(
+            SessionId.email_addr==email_addr,
+            SessionId.session_id==session_id,
+        ).first()
+        
+        return bool(session_id)
+    return validate_session_id_helper(email_addr, session_id)
 
 ## Get Functions
 def get_all_events(session):
@@ -140,23 +143,26 @@ def get_events_by_month(session, month,year=None):
     events = query.all()
     return events
 
-@cache.cache(ttl=86400, limit=512)
+
 def get_event_tags(session, events, convertName=False):
     '''
     Given a list of Event models, return a list of all tags associated with each event
     
     If `convertToName` is True, tag number will be converted to the category name.
     '''
-    res = []
-    for event in events:
-        #Using relationships defined in Event
-        event_tags = [x.get_tag_value() for x in event.tags.all()]
-        if convertName: #Parse tag numbers into category names
-            event_categories = parse_tags(event_tags)
-            res.append(event_categories)
-        else:
-            res.append(event_tags)
-    return res
+    @cache.cache(ttl=86400, limit=512)
+    def get_event_tags_helper(events, convertName):
+        res = []
+        for event in events:
+            #Using relationships defined in Event
+            event_tags = [x.get_tag_value() for x in event.tags.all()]
+            if convertName: #Parse tag numbers into category names
+                event_categories = parse_tags(event_tags)
+                res.append(event_categories)
+            else:
+                res.append(event_tags)
+        return res
+    return get_event_tags_helper(events, convertName)
 
 def get_event_user_emails(session, events):
     '''
@@ -171,6 +177,7 @@ def get_event_user_emails(session, events):
             res.append("unknown_user") # Default "unknown_user" is failsafe in case we misadd a user
     return res
 
+
 def get_event_description(session, event_id, description_type):
     """
     Get the event description of either plaintext or html type
@@ -179,16 +186,18 @@ def get_event_description(session, event_id, description_type):
     Requirements:
         - `description_type` is EventDescriptionType enum
     """
-    description_chunks = session.query(EventDescription).filter(
-            EventDescription.event_id == event_id,
-            EventDescription.content_type == description_type.value
-    ).order_by(
-            EventDescription.content_index
-    ).all()
-    full_description = "".join([chunk.data for chunk in description_chunks])
-    return full_description
+    @cache.cache(ttl=86400, limit=1024)
+    def get_event_description_helper(event_id, description_type):
+        description_chunks = session.query(EventDescription).filter(
+                EventDescription.event_id == event_id,
+                EventDescription.content_type == description_type.value
+        ).order_by(
+                EventDescription.content_index
+        ).all()
+        full_description = "".join([chunk.data for chunk in description_chunks])
+        return full_description
+    return get_event_description_helper(event_id, description_type)
 
-@cache.cache(ttl=86400, limit=512)
 def get_event_descriptions(session, events, description_type):
     '''
     Given a list of Event models, return a list of either plaintext or html
