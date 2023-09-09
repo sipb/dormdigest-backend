@@ -16,7 +16,7 @@ from auth.auth_helpers import generate_API_token
 from redis import StrictRedis
 from redis_cache import RedisCache
 
-client = StrictRedis(host="redis", decode_responses=True)
+client = StrictRedis(host="localhost", decode_responses=True)
 cache = RedisCache(redis_client=client)
 
 MAX_COMMIT_RETRIES = 10
