@@ -162,7 +162,7 @@ def get_event_tags(session, events, convertName=False):
             else:
                 res.append(event_tags)
         return res
-    event_ids = set([event.id for event in events]) #Make events list serializable 
+    event_ids = sorted([event.id for event in events]) #Make events list serializable 
     return get_event_tags_helper(event_ids, convertName)
 
 def get_event_user_emails(session, events):
