@@ -150,7 +150,6 @@ def get_event_tags(session, events, convertName=False):
     
     If `convertToName` is True, tag number will be converted to the category name.
     '''
-    @cache.cache(ttl=86400, limit=512)
     def get_event_tags_helper(events, convertName):
         res = []
         for event in events:
