@@ -43,3 +43,18 @@ Relevant permission bits
   * `CREATE DATABASE dormdigest_prod;`
 * To run the frontend static files server, do:
   * `http-server -S -C /etc/letsencrypt/live/dormdigest.xvm.mit.edu/fullchain.pem -K /etc/letsencrypt/live/dormdigest.xvm.mit.edu/privkey.pem -p 443 ./build -- & > server_log.txt`
+
+## Optimizations
+
+* Setting up **Redis**
+  * To improve the performance of our FastAPI server, we added support for function caching via redis
+  * First, to install Redis:
+    * `curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg`
+    * `echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list`
+    * `sudo apt-get update`
+    * `sudo apt-get install redis`
+    * `sudo apt install redis-server`
+  * Verify it's working with:
+    * `systemctl status redis`
+    * `redis-cli ping` (should get back PONG)
+    * Run `test_redis.py`. You should see both operations taking about 5 seconds each the first time running the script, and then almost instant the second time.
