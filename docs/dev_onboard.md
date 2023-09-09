@@ -43,6 +43,9 @@ Relevant permission bits
   * `CREATE DATABASE dormdigest_prod;`
 * To run the frontend static files server, do:
   * `http-server -S -C /etc/letsencrypt/live/dormdigest.xvm.mit.edu/fullchain.pem -K /etc/letsencrypt/live/dormdigest.xvm.mit.edu/privkey.pem -p 443 ./build -- & > server_log.txt`
+* To run the backend on the production server, do:
+* `source env/bin/activate`
+* `python3 src/main.py 2>&1 > server_log.txt`
 
 ## Optimizations
 
