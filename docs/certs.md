@@ -19,4 +19,4 @@ We set up auto cert renew by running `crontab -e` and then adding the following 
 0 12 * * * /snap/bin/certbot renew --quiet --nginx
 ```
 
-This should run certbot every day to check if we need to renew our certificate and then renew as necessary.
+This should run certbot every day to check if we need to renew our certificate and then renew as necessary. 
