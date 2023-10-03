@@ -56,7 +56,8 @@ Relevant permission bits
       * If at any point you want to stop the service, do so with:
         * `brew services stop redis`
 * Finally, start the Python server:
-  * Inside `src/`, run `main.py` (either click Run in Vscode or do `python3 main.py`)
+  * Inside the main folder, run `python3 src/main.py`
+    * **Note:** If you try to run `main.py` inside the `src/` folder, the imports will break
   * Now if you navigate to `https://localhost:8432/docs` you should see the server's interactive page
 
 ## Helpful Commands
@@ -73,8 +74,9 @@ Relevant permission bits
   * `http-server -S -C /etc/letsencrypt/live/dormdigest.xvm.mit.edu/fullchain.pem -K /etc/letsencrypt/live/dormdigest.xvm.mit.edu/privkey.pem -p 443 ./build -- & > server_log.txt`
 * To run the backend on the production server, do:
 * `source env/bin/activate`
-* `python3 src/main.py 2>&1 > server_log.txt`
-
+* (Old Method) `python3 src/main.py 2>&1 > server_log.txt`
+* (New Method - Fault Tolerant & Multiprocessing) `gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --certfile=./configs/cert.pem --keyfile=./configs/key.pem --capture-output --log-level debug --error-logfile server_error_log.txt --bind localhost:8432 --access-logfile server_log.txt`
+  * Make sure you run this inside of `src/` this time
 ## Deprecated Stuff
 
 You can ignore this part. We're saving these commands in case they become useful again in the future:
