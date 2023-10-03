@@ -6,6 +6,8 @@ pyrightconfig.json
 # Secrets
 src/configs/*
 !src/configs/__init__.py
+!src/configs/nginx.conf
+!src/configs/crontab
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
