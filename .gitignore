@@ -8,6 +8,7 @@ src/configs/*
 !src/configs/__init__.py
 !src/configs/nginx.conf
 !src/configs/crontab
+!src/configs/server_configs.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

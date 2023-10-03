@@ -56,11 +56,10 @@ Relevant permission bits
       * If at any point you want to stop the service, do so with:
         * `brew services stop redis`
 * Finally, start the Python server:
-  * Inside the main folder, run `python3 src/main.py`
-    * **Note:** If you try to run `main.py` inside the `src/` folder, the imports will break
+  * Inside the `src/` folder, run `python3 main.py`
   * Now if you navigate to `https://localhost:8432/docs` you should see the server's interactive page
 
-## Helpful Commands
+## Pushing/Pulling from Production Servers
 
 * Pulling emails from mail scripts
   * In the initial stages, we're saving all emails that errored out at `mail_scripts/saved` on the dormdigest locker. To retrieve it, first log into Athena and cd into a local directory (one owned by you) folder. Then do:
@@ -72,11 +71,14 @@ Relevant permission bits
   * `scp -r ~/Documents/SIPB/dormdigest-frontend/build/* root@dormdigest.xvm.mit.edu:/home/dorm/dormdigest-frontend/build/`
 * To run the frontend static files server, do:
   * `http-server -S -C /etc/letsencrypt/live/dormdigest.xvm.mit.edu/fullchain.pem -K /etc/letsencrypt/live/dormdigest.xvm.mit.edu/privkey.pem -p 443 ./build -- & > server_log.txt`
+
+## Deployment
+
 * To run the backend on the production server, do:
-* `source env/bin/activate`
-* (Old Method) `python3 src/main.py 2>&1 > server_log.txt`
-* (New Method - Fault Tolerant & Multiprocessing) `gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --certfile=./configs/cert.pem --keyfile=./configs/key.pem --capture-output --log-level debug --error-logfile server_error_log.txt --bind localhost:8432 --access-logfile server_log.txt`
-  * Make sure you run this inside of `src/` this time
+  * `source env/bin/activate`
+  * (Old Method) `python3 main.py 2>&1 > server_log.txt`
+  * (New Method - Fault Tolerant & Multiprocessing) `gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --certfile=/etc/letsencrypt/live/dormdigest.xvm.mit.edu/fullchain.pem --keyfile=/etc/letsencrypt/live/dormdigest.xvm.mit.edu/privkey.pem --capture-output --log-level debug --error-logfile server_error_log.txt --bind 0.0.0.0:8432 --access-logfile server_log.txt &`
+
 ## Deprecated Stuff
 
 You can ignore this part. We're saving these commands in case they become useful again in the future:
