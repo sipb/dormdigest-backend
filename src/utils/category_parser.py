@@ -80,6 +80,12 @@ SALE = Category(
    "Selling things, senior sales."
 )
 
+RSVP = Category(
+   ["RSVP"],
+   "RSVP",
+   "Events that ask for you to RSVP."
+)
+
 # as they're stored in the database
 CATEGORIES = [
    OTHER,
@@ -91,6 +97,7 @@ CATEGORIES = [
    BOBA,
    TALKS,
    SALE,
+   RSVP
 ]
 
 def parse_categories(text: str) -> Set[int]:
