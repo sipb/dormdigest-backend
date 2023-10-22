@@ -59,6 +59,39 @@ Relevant permission bits
   * Inside the `src/` folder, run `python3 main.py`
   * Now if you navigate to `https://localhost:8432/docs` you should see the server's interactive page
 
+## Logging into prod server
+1. Ask a dormdigest maintainer to add your public ssh key to the prod server's ssh agent
+  * Example: `cat ~/.ssh/id_rsa.pub`
+  * For maintainer: To check which keys are in the prod server's ssh agent already run `cat ~/.ssh/authorized_keys`
+2. Access into server via ssh (after keys have been added)
+  * `ssh root@dormdigest.xvm.mit.edu`
+3. List screens that are running
+  * `screen -ls`
+  * For more information on screen vist: <https://vtcri.kayako.com/article/199-using-screen-in-linux-to-keep-ssh-sessions-running>
+4. Connect the screen of the part of dormdigest you want to update
+  * Example (to update backend): `screen -r 935.backend`
+5. Kill said parts processes
+  * Backend:
+    * `pkill gunicorn`
+    * To verify that processes have been killed
+      * Check gunicorn processes: `ps aux | grep gunicorn`
+      * Check server error log (should show shut down process): `cat server_error_log.txt`
+    * Frontend:
+      * N/A
+
+6. Update part of dormdigest you want to update
+  * Backend:
+    * `git pull`
+  * Frontend:
+    * Because XVM doesn't support node 18 properly, whenever you want to run a new build in production, you will need to build it locally with `npm run build` and then secure copy the build files onto the server. An example command is:
+    * `scp -r ~/Documents/SIPB/dormdigest-frontend/build/* root@dormdigest.xvm.mit.edu:/home/dorm/dormdigest-frontend/build/`
+7. Get dormdigest running again
+  * Backend:
+    * `run.sh`
+  * Frontend:
+    * N/A
+
+
 ## Pushing/Pulling from Production Servers
 
 * Pulling emails from mail scripts
