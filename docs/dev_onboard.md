@@ -56,15 +56,17 @@ Relevant permission bits
       * If at any point you want to stop the service, do so with:
         * `brew services stop redis`
 * Finally, start the Python server:
-  * Inside the `src/` folder, run `python3 main.py`
-  * Now if you navigate to `https://localhost:8432/docs` you should see the server's interactive page
+  * **FOR DEVELOPMENT:**
+    * Inside the `src/` folder, run `python3 main.py`
+    * Now if you navigate to `https://localhost:8432/docs` you should see the server's interactive page
 
-## Logging into prod server
+## Logging into prod/testing server
 1. Ask a dormdigest maintainer to add your public ssh key to the prod server's ssh agent
   * Example: `cat ~/.ssh/id_rsa.pub`
   * For maintainer: To check which keys are in the prod server's ssh agent already run `cat ~/.ssh/authorized_keys`
 2. Access into server via ssh (after keys have been added)
-  * `ssh root@dormdigest.xvm.mit.edu`
+  * (PROD)`ssh sipb@dormdigest.mit.edu`
+  * (TESTING) `ssh root@dormdigest.xvm.mit.edu`
 3. List screens that are running
   * `screen -ls`
   * For more information on screen vist: <https://vtcri.kayako.com/article/199-using-screen-in-linux-to-keep-ssh-sessions-running>
@@ -83,8 +85,12 @@ Relevant permission bits
   * Backend:
     * `git pull`
   * Frontend:
-    * Because XVM doesn't support node 18 properly, whenever you want to run a new build in production, you will need to build it locally with `npm run build` and then secure copy the build files onto the server. An example command is:
-    * `scp -r ~/Documents/SIPB/dormdigest-frontend/build/* root@dormdigest.xvm.mit.edu:/home/dorm/dormdigest-frontend/build/`
+    * **FOR TESTING SERVER:**
+      * Because XVM doesn't support node 18 properly, whenever you want to run a new build in production, you will need to build it locally with `npm run build` and then secure copy the build files onto the server. An example command is:
+      * `scp -r ~/Documents/SIPB/dormdigest-frontend/build/* root@dormdigest.xvm.mit.edu:/home/dorm/dormdigest-frontend/build/`
+    * **FOR PRODUCTION SERVER:**
+      * With the production server, you can just build the frontend files directly
+      * `npm run build`
 7. Get dormdigest running again
   * Backend:
     * `run.sh`
@@ -101,8 +107,9 @@ Relevant permission bits
     * `scp -r kerb@athena.dialup.mit.edu:~/dormdigest/mail_scripts/saved/ ./test_emails/`
 * Pushing frontend build to XVM
   * Because XVM doesn't support node 18 properly, whenever you want to run a new build in production, you will need to build it locally with `npm run build` and then secure copy the build files onto the server. An example command is:
-  * `scp -r ~/Documents/SIPB/dormdigest-frontend/build/* root@dormdigest.xvm.mit.edu:/home/dorm/dormdigest-frontend/build/`
-* To run the frontend static files server, do:
+  * For normal frontend build: `scp -r ~/Documents/SIPB/dormdigest-frontend/build/* root@dormdigest.xvm.mit.edu:/home/dorm/dormdigest-frontend/build/`
+  * For Express.js auth server build: `scp -r ~/Documents/SIPB/dormdigest-frontend/auth_backend/build/* root@dormdigest.xvm.mit.edu:/home/dorm/dormdigest-frontend/auth_backend/build/`
+* To run the frontend static files server, do: 
   * `http-server -S -C /etc/letsencrypt/live/dormdigest.xvm.mit.edu/fullchain.pem -K /etc/letsencrypt/live/dormdigest.xvm.mit.edu/privkey.pem -p 443 ./build -- & > server_log.txt`
 
 ## Deployment
@@ -110,7 +117,11 @@ Relevant permission bits
 * To run the backend on the production server, do:
   * `source env/bin/activate`
   * (Old Method) `python3 main.py 2>&1 > server_log.txt`
-  * (New Method - Fault Tolerant & Multiprocessing) `gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --certfile=/etc/letsencrypt/live/dormdigest.xvm.mit.edu/fullchain.pem --keyfile=/etc/letsencrypt/live/dormdigest.xvm.mit.edu/privkey.pem --capture-output --log-level debug --error-logfile server_error_log.txt --bind 0.0.0.0:8432 --access-logfile server_log.txt &`
+  * (New Method - Fault Tolerant & Multiprocessing) 
+    * **FOR TESTING SERVER**
+      * Inside the `src/` folder, run `run_testing.sh`
+    * **FOR PRODUCTION SERVER**
+      * Inside the `src/` folder, run `run_prod.sh`
 
 ## Deprecated Stuff
 

@@ -58,7 +58,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_headers=["*"],
     allow_methods=["*"],
-    allow_origins=["http://localhost:3000","https://localhost:3000","https://dormdigest.xvm.mit.edu"]
+    allow_origins=["http://localhost:3000","https://localhost:3000","https://dormdigest.xvm.mit.edu","https://dormdigest.mit.edu"]
 )
 
 @app.get("/")
@@ -226,6 +226,6 @@ if __name__ == '__main__':
                 host=config.SERVER_HOST,
                 port=config.SERVER_PORT,
                 reload=False, #More optimized for production
-                ssl_keyfile=config.SSL_KEY_FILE,
-                ssl_certfile=config.SSL_CRT_FILE
+                #ssl_keyfile=config.SSL_KEY_FILE,
+                #ssl_certfile=config.SSL_CRT_FILE
                 )
