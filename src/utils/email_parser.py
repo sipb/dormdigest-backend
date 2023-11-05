@@ -1,6 +1,7 @@
 from typing import Any, Optional, Set, List, Tuple
 from dataclasses import dataclass
 
+
 import sys
 import datetime
 import re
@@ -9,13 +10,17 @@ import mailparser
 
 # Image processing
 from PIL import Image
-from io import BytesIO
 import base64
+from io import BytesIO
+# Image saving
+import uuid
+import os
 
 from .parser import Parser, ParserChain
 from .time_parser import parse_event_time, EventTime
 from .location_parser import parse_locations
 from .category_parser import parse_categories
+from configs.server_configs import BASE_IMAGE_URL, LOCAL_IMAGE_PATH
 
 # pattern that determines if it's a dormspam or not
 DORMSPAM_PATTERN = r"\b[bB]cc[’'`-]?e?d\s+to\s+(all\s+)?(?:dorms|dormspam)[;,.]?\s+([\*\s\w-]+)\s+for bc-talk\b"
@@ -32,9 +37,9 @@ COMPRESSED_IMAGE_WIDTH = 500 # pixels
 
 def compress_image(original_image: str) -> str:
     '''
-    Given a base64 encoding of an image, resize the image such that it is 500 x * pixels in size 
+    Given a base64 encoding of an image, resize the image such that it is 500 x * pixels in size
     (keeping aspect ratio), and compress it using Pillow's `optimize` and `quality` flags.
-    
+
     Returns base64 encoding of new image as PNG format
     '''
     output_buffer = BytesIO() # Store the result
@@ -48,6 +53,36 @@ def compress_image(original_image: str) -> str:
     img.save(output_buffer, optimize=True, quality=80, format='PNG')
     output_buffer.seek(0)
     return base64.b64encode(output_buffer.read()).decode('utf-8')
+
+def generate_image_name():
+    name = f"{uuid.uuid1()}.png"
+    return name
+
+def check_duplicate(image_path):
+    return os.path.exists(image_path)
+
+def compress_image_and_save(original_image: str) -> str:
+    '''
+    Given a base64 encoding of an image, resize the image such that it is 500 x * pixels in size
+    (keeping aspect ratio), and compress it using Pillow's `optimize` and `quality` flags.
+
+    Returns url of the image
+    '''
+    img = Image.open(BytesIO(base64.b64decode(original_image)))
+    #Calculate new image size
+    wpercent = (COMPRESSED_IMAGE_WIDTH/float(img.size[0]))
+    hsize = int((float(img.size[1])*float(wpercent)))
+    # Resize the image
+    img = img.resize((COMPRESSED_IMAGE_WIDTH,hsize), Image.Resampling.LANCZOS)
+    # Generate a unique name for the image using uuid1
+    image_name = generate_image_name()
+    image_path = LOCAL_IMAGE_PATH + image_name
+    while check_duplicate(image_path):
+        image_name = generate_image_name()
+        image_path = LOCAL_IMAGE_PATH + image_name
+    img.save(image_path, optimize=True, quality=80, format='PNG')
+    return BASE_IMAGE_URL+image_name
+
 
 # raised when the email could not be parsed
 class EmailMissingHeaders(Exception): pass
@@ -63,7 +98,7 @@ class HTML2TextConverter(html.parser.HTMLParser):
         >>> print(parser.get_text())
         Some header
         Some text
-        >>> 
+        >>>
     """
     entities = {
         "nbsp": " ",
@@ -162,7 +197,7 @@ class Email:
     @property
     def color(self) -> Optional[str]:
         search = re.search(DORMSPAM_PATTERN, self.plaintext, flags=re.IGNORECASE)
-        if search: 
+        if search:
             return search.group(DORMSPAM_PATTERN_COLOR_GROUP)
         return None
 
@@ -203,13 +238,13 @@ ContactsType = list[tuple[str,str]]
 
 def eat(raw) -> Email:
     """Digest a raw email
-    
+
     Raises:
         EmailMissingHeaders: if some headers could not be parsed
     """
     email = mailparser.parse_from_string(raw)
     assert(isinstance(email, mailparser.MailParser))
-    
+
     # keep track of what couldn't be found
     headers_not_found: list[str] = []
 
@@ -224,10 +259,10 @@ def eat(raw) -> Email:
         headers = ", ".join([repr(header) for header in headers_not_found])
         msg = f"failed to parse: {headers}"
         raise EmailMissingHeaders(msg)
-    
-    # optional headers 
+
+    # optional headers
     thread_topic = None if "Thread-Topic" not in email.headers else email.headers["Thread-Topic"]
-    
+
     # keep my type checker quiet
     assert(message_id is not None)
     assert(sent is not None)
@@ -238,17 +273,17 @@ def eat(raw) -> Email:
     first_sender_name, first_sender_email = sender[0] # (name, email)
     first_to_name, first_to_email = None, None
     if to is not None: first_to_name, first_to_email = to[0]
-    
+
     # theoretically, sender's email should always be filled out, but not necessarily to's email
     # if the To spot is empty, `first_to_email` is an empty string
     sender_contact = Contact(_parser_email_address(first_sender_email), first_sender_name)
     to_contact = None
     if first_to_name or first_to_email:
         to_contact = Contact(_parser_email_address(first_to_email), first_to_name)
-    
+
     # parse email body, and process inserted images
     content = {}
-    
+
     if email.text_plain:
         content["text/plain"] = email.text_plain[0]
         for attachment in email.attachments:
@@ -264,9 +299,9 @@ def eat(raw) -> Email:
                 cte = attachment.get("content_transfer_encoding") or "base64"
                 before = f'src="cid:{cid}"'
                 payload_fixed = attachment["payload"].replace("\n","")
-                payload_compressed = compress_image(payload_fixed)
-                after = f'''src="data:image/png;{cte},{payload_compressed}"'''
-                content["text/html"] = content["text/html"].replace(before, after)
+                payload_image_url = compress_image_and_save(payload_fixed)
+                after = f'''src="{payload_image_url}"'''
+                content["text/html"] = content["text/html"].replace(before, after) #change the cid with the basic c4 encoding of the image
 
     return Email(
         sent=sent,
@@ -284,7 +319,7 @@ if __name__ == "__main__":
     print("Parsed the email:")
     for k, v in parsed_email.__dict__.items():
         print(f"   {k!r} -> {v!r}")
-    
+
     print(f"   'color' -> {parsed_email.color!r}")
     print(f"   'dormspam' -> {parsed_email.dormspam!r}")
     print(f"   'when' -> {parsed_email.when!r}")
