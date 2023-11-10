@@ -11,6 +11,6 @@ MAILDIR=$HOME/mail_scripts
    ! sipb-dormdigest-debug@mit.edu
 
    :0
-   | /usr/bin/python3 "${HOME}/mail_scripts/send_to_backend.py"
+   | "${HOME}/mail_scripts/venv/bin/python3" "${HOME}/mail_scripts/send_to_backend.py"
 }
 

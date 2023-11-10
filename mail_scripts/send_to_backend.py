@@ -6,8 +6,8 @@ from datetime import datetime
 from pathlib import Path
 
 from config import (
+  ENDPOINT,
   ENDPOINT_DEV,
-  ENDPOINT_PRO,
   WEBHOOK_URL,
   TOKEN,
 )
@@ -61,4 +61,4 @@ if __name__ == "__main__":
   if OPERATING:
     email = sys.stdin.read()
     success = pass_to_api(email, ENDPOINT_DEV, save=True)
-    if success: pass_to_api(email, ENDPOINT_PRO, save=False)
+    if success: pass_to_api(email, ENDPOINT, save=False)
