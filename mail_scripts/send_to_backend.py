@@ -3,7 +3,7 @@ import os
 import json
 from urllib import request, error
 from datetime import datetime
-from pathlib import Path
+#from pathlib import Path
 
 from config import (
   ENDPOINT,
@@ -18,7 +18,7 @@ _headers = {"Content-Type": "application/json"}
 
 def save_last_email(email):
   filename = datetime.now().strftime("%Y-%m-%d_%H-%M-%S.txt")
-  filepath = Path("./saved") / filename
+  filepath = "./saved/" + filename
   with open(filepath, "w") as f:
     f.write(email + "\n")
 
