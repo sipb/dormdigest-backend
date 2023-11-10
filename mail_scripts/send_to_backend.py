@@ -5,7 +5,12 @@ from urllib import request, error
 from datetime import datetime
 from pathlib import Path
 
-from config import ENDPOINT, WEBHOOK_URL, TOKEN
+from config import (
+  ENDPOINT_DEV,
+  ENDPOINT_PRO,
+  WEBHOOK_URL,
+  TOKEN,
+)
 
 OPERATING = True
 
@@ -32,25 +37,28 @@ def send_error_to_mattermost(http_error):
   req = request.Request(WEBHOOK_URL, data=json.dumps(data).encode(), headers=_headers, method="POST")
   request.urlopen(req)
 
-def pass_to_api(email):
-  if ENDPOINT is None or TOKEN is None:
+def pass_to_api(email, endpoint, *, save=True):
+  if endpoint is None or TOKEN is None:
     return
 
   payload = {
     "email": email,
     "token": TOKEN,
   }
-  req = request.Request(ENDPOINT, data=json.dumps(payload).encode(), headers=_headers, method="POST")
+  req = request.Request(endpoint, data=json.dumps(payload).encode(), headers=_headers, method="POST")
 
   try:
     response = request.urlopen(req)
     if response.status in (200, 201):
-      save_last_email(email)
-      return
+      if save: save_last_email(email)
   except error.HTTPError as e:
     send_error_to_mattermost(e)
+    return False
+
+  return True
 
 if __name__ == "__main__":
   if OPERATING:
     email = sys.stdin.read()
-    pass_to_api(email)
+    success = pass_to_api(email, ENDPOINT_DEV, save=True)
+    if success: pass_to_api(email, ENDPOINT_PRO, save=False)
