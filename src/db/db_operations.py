@@ -100,14 +100,27 @@ def get_all_events(session):
     '''Get information of all of events in database'''
     return session.query(Event).all()
 
-def get_events_by_date(session, from_date):
+def get_events_by_date(session, from_date, filter_by_sent_date):
     '''
     Get all events happening on a given day,
     ordered by start time and event name
     
     from_date: datetime Date object for target day
+    filter_by_sent_date: Boolean for whether we should select the date the email was sent
+                         instead of the parsed start date
     '''
-    query = session.query(
+    if filter_by_sent_date:
+        #Filter by sent date
+        query = session.query(
+            Event
+        ).filter(
+            Event.date_created.date().between(from_date, from_date)
+        ).order_by(
+            Event.date_created, Event.title
+        )
+    else:
+        #Filter by the start date
+        query = session.query(
             Event
         ).filter(
             Event.start_date.between(from_date, from_date)
@@ -245,7 +258,8 @@ def add_to_db(session, obj, others=None,rollbackfunc=None):
 
 def add_event(session, title, user_id, description, event_tags=[0],\
               start_date=None, end_date=None, start_time=None, end_time=None, \
-              description_html=None, club_id=None, location=None, cta_link=None):
+              description_html=None, club_id=None, location=None, cta_link=None,\
+              date_created=None):
     '''
     Adds an event to the database
     
@@ -260,10 +274,11 @@ def add_event(session, title, user_id, description, event_tags=[0],\
     event.club_id = club_id
     event.location = location
     event.start_date = start_date if start_date else datetime.today().date() # Default to day received
-    event.end_date = end_date 
+    event.end_date = end_date
     event.start_time = start_time if start_time else datetime.min.time() # Default to midnight
     event.end_time = end_time
     event.cta_link = cta_link
+    event.date_created = date_created if date_created else datetime.now()
 
     committed = add_to_db(session, event)
     if committed:

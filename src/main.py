@@ -12,7 +12,7 @@ import db.db_operations as db_operations
 import db.schema as schema
 from db.db_helpers import row2dict
 from pydantic import BaseModel, ValidationError, validator
-from datetime import date
+from datetime import date, datetime
 import traceback
 from collections import Counter
 
@@ -44,7 +44,8 @@ class GetEventsByMonth(BaseModel):
 class GetEventsByDate(BaseModel):
     from_date: date
     include_description: bool | None = False
-
+    filter_by_sent_date: bool | None = False # Select events by the day their email was sent
+                                             # instead of when our parser thinks it is occurring
     auth: AuthModel
 
 class EmailModel(BaseModel):
@@ -142,7 +143,7 @@ async def get_events_by_date(req: GetEventsByDate):
                 res["descriptions_html"] = []
             return res
 
-        events = db_operations.get_events_by_date(session,req.from_date)
+        events = db_operations.get_events_by_date(session,req.from_date,req.filter_by_sent_date)
         tags = db_operations.get_event_tags(session,events)
         users = db_operations.get_event_user_emails(session,events)
         res = {        
@@ -197,7 +198,7 @@ async def digest(req: EmailModel):
                 user_id,
                 parsed.plaintext,
                 parsed.categories,
-                parsed.when.start_date or parsed.sent.date(),
+                parsed.when.start_date or parsed.sent.date(), #If no date was found, use the sent date
                 parsed.when.end_date,
                 parsed.when.start_time,
                 parsed.when.end_time,
@@ -205,6 +206,7 @@ async def digest(req: EmailModel):
                 club_id,
                 location,
                 link,
+                parsed.sent or datetime.now()
             )
 
 @app.post("/create_session", status_code=status.HTTP_201_CREATED)
@@ -226,6 +228,6 @@ if __name__ == '__main__':
                 host=config.SERVER_HOST,
                 port=config.SERVER_PORT,
                 reload=False, #More optimized for production
-                #ssl_keyfile=config.SSL_KEY_FILE,
-                #ssl_certfile=config.SSL_CRT_FILE
+                ssl_keyfile=config.SSL_KEY_FILE,
+                ssl_certfile=config.SSL_CRT_FILE
                 )
