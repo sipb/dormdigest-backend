@@ -10,5 +10,8 @@ src/configs/*
 !src/configs/crontab
 !src/configs/server_configs.py
 
+#Saved images
+src/images/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
