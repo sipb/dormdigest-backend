@@ -61,6 +61,7 @@ Relevant permission bits
     * Now if you navigate to `https://localhost:8432/docs` you should see the server's interactive page
 
 ## Logging into prod/testing server
+
 1. Ask a dormdigest maintainer to add your public ssh key to the prod server's ssh agent
   * Example: `cat ~/.ssh/id_rsa.pub`
   * For maintainer: To check which keys are in the prod server's ssh agent already run `cat ~/.ssh/authorized_keys`
@@ -80,7 +81,6 @@ Relevant permission bits
       * Check server error log (should show shut down process): `cat server_error_log.txt`
     * Frontend:
       * N/A
-
 6. Update part of dormdigest you want to update
   * Backend:
     * `git pull`
@@ -114,7 +114,7 @@ Relevant permission bits
 
 ## Deployment
 
-* To run the backend on the production server, do:
+* To run the backend, do:
   * `source env/bin/activate`
   * (Old Method) `python3 main.py 2>&1 > server_log.txt`
   * (New Method - Fault Tolerant & Multiprocessing) 
@@ -122,6 +122,19 @@ Relevant permission bits
       * Inside the `src/` folder, run `run_testing.sh`
     * **FOR PRODUCTION SERVER**
       * Inside the `src/` folder, run `run_prod.sh`
+* To run the authentication server, do:
+  * **FOR PRODUCTION SERVER**
+    * `cd ~/dormdigest-frontend/auth_backend`
+    * `nvm use 18`
+    * `npm install && npm run build`
+    * `pm2 start build/index.js --name auth --log auth_log.txt`
+
+## Firewall
+
+* On the production server, we have `ufw` running, which is a firewall service that exposes specific ports that we specify to the Internet. 
+  * To see which ports are open, do: `sudo ufw status`
+  * To open a specific port, do: `sudo ufw allow [port_num]` 
+    * This step is necessary when adding any new services to DormDigest that listens on a specific port
 
 ## Deprecated Stuff
 
