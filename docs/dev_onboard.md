@@ -88,8 +88,15 @@ Relevant permission bits
     * **FOR TESTING SERVER:**
       * Because XVM doesn't support node 18 properly, whenever you want to run a new build in production, you will need to build it locally with `npm run build` and then secure copy the build files onto the server. An example command is:
       * `scp -r ~/Documents/SIPB/dormdigest-frontend/build/* root@dormdigest.xvm.mit.edu:/home/dorm/dormdigest-frontend/build/`
-    * **FOR PRODUCTION SERVER:**
-      * With the production server, you can just build the frontend files directly
+    * **FOR PRODUCTION SERVER:**   
+      * With the production server, you can just build the frontend files directly. Normally though we'll have modifications in certain config files that are specific to the production (e.g., specifying REACT_APP_BACKEND_URL and SSL cert files)
+      * Because of this, you should do the following when pulling:
+      * 1. `git add .`
+        2. `git stash`
+        3. `git pull`
+        4. `git stash pop`
+        5. `git reset`
+        6. `git status`
       * `npm run build`
 7. Get dormdigest running again
   * Backend:
