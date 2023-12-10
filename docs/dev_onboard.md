@@ -28,6 +28,9 @@ Relevant permission bits
     * **Note:** If you are using Visual Studio for your code editor, normally it will automatically load in your virtual environment (if found in current working directory) when you run your code. This saves time from having to load and unload your venv each time.
 * Creating your local HTTPS certificates
   * For security, we require that the FastAPI server runs with HTTPS enabled. For local development you'll need to create your own self-signed certificates, done through `mkcert` tool.
+  * On Linux/Windows:
+    * Install `nss`, such as `sudo dnf install nss-tools`. `mkcert` will tell you how to install it if you skip this step.
+    * Download `mkcert` from https://github.com/FiloSottile/mkcert/releases and put it in your PATH
   * On Mac:
     * `brew install mkcert`
     * `brew install nss` (if you use Firefox)
