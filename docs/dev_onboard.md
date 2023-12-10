@@ -60,6 +60,7 @@ Relevant permission bits
         * `brew services stop redis`
 * Finally, start the Python server:
   * **FOR DEVELOPMENT:**
+    * Edit `src/configs/server_configs.py` and set `CURRENT_MODE` to `dev` instead of `prod`
     * Inside the `src/` folder, run `python3 main.py`
     * Now if you navigate to `https://localhost:8432/docs` you should see the server's interactive page
 
