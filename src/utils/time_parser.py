@@ -261,12 +261,21 @@ def parse_event_time(text: str, *, today: datetime.date=TODAY) -> EventTime:
         text: The body of text to search for event times.
     """
     # search for event date
-    date = DATE_PARSER_CHAIN(text, today=today)
+    try:
+        date = DATE_PARSER_CHAIN(text, today=today)
+    except ValueError:
+        date = None
 
     # search for event times
-    time_range = TIME_RANGE_PARSER_CHAIN(text)
+    try:
+        time_range = TIME_RANGE_PARSER_CHAIN(text)
+    except ValueError:
+        time_range = None
     if time_range is None:
-        start_time = TIME_PARSER_CHAIN(text)
+        try:
+            start_time = TIME_PARSER_CHAIN(text)
+        except ValueError:
+            start_time = None
         end_time = None
     else:
         start_time, end_time = time_range
