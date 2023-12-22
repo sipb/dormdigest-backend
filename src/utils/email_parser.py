@@ -12,6 +12,8 @@ import mailparser
 from PIL import Image
 import base64
 from io import BytesIO
+from pillow_heif import register_heif_opener
+
 # Image saving
 import uuid
 import os
@@ -35,24 +37,8 @@ CONTENT_TYPES = (
 # Compressing images
 COMPRESSED_IMAGE_WIDTH = 500 # pixels
 
-def compress_image(original_image: str) -> str:
-    '''
-    Given a base64 encoding of an image, resize the image such that it is 500 x * pixels in size
-    (keeping aspect ratio), and compress it using Pillow's `optimize` and `quality` flags.
-
-    Returns base64 encoding of new image as PNG format
-    '''
-    output_buffer = BytesIO() # Store the result
-    img = Image.open(BytesIO(base64.b64decode(original_image)))
-    #Calculate new image size
-    wpercent = (COMPRESSED_IMAGE_WIDTH/float(img.size[0]))
-    hsize = int((float(img.size[1])*float(wpercent)))
-    # Resize the image
-    img = img.resize((COMPRESSED_IMAGE_WIDTH,hsize), Image.Resampling.LANCZOS)
-    # Optimize image for file size
-    img.save(output_buffer, optimize=True, quality=80, format='PNG')
-    output_buffer.seek(0)
-    return base64.b64encode(output_buffer.read()).decode('utf-8')
+#Enable Pillow plugin to support HEIC images
+register_heif_opener() 
 
 def generate_image_name():
     name = f"{uuid.uuid1()}.png"
@@ -299,9 +285,11 @@ def eat(raw) -> Email:
                 cte = attachment.get("content_transfer_encoding") or "base64"
                 before = f'src="cid:{cid}"'
                 payload_fixed = attachment["payload"].replace("\n","")
-                payload_image_url = compress_image_and_save(payload_fixed)
-                after = f'''src="{payload_image_url}"'''
-                content["text/html"] = content["text/html"].replace(before, after) #change the cid with the basic c4 encoding of the image
+                #Proceed to compress and save if attachment is an image
+                if 'mail_content_type' in attachment and attachment['mail_content_type'].startswith("image/"):
+                    payload_image_url = compress_image_and_save(payload_fixed)
+                    after = f'''src="{payload_image_url}"'''
+                    content["text/html"] = content["text/html"].replace(before, after) #change the cid with the basic c4 encoding of the image
 
     return Email(
         sent=sent,

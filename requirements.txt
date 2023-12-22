@@ -1,8 +1,9 @@
 #Standard 
 wheel==0.40.0
 
-# PIL
+# Image processing
 Pillow==10.0.0
+pillow-heif==0.14.0
 
 #FastAPI
 fastapi==0.92.0
