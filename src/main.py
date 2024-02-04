@@ -32,7 +32,20 @@ class AuthModel(BaseModel):
 class GetEventsByMonth(BaseModel):
     month: int
     year: int | None = None
+    auth: AuthModel
+    filter_by_sent_date: bool | None = False
+    
+    @validator('month')
+    def is_valid_month(cls, v):
+        if not 1 <= v <= 12:
+            raise ValueError("Month must be in range 1 and 12")
+        return v
+    
 
+class GetEventsFrequencyByMonth(BaseModel):
+    month: int
+    year: int | None = None
+    filter_by_sent_date: bool | None = False
     auth: AuthModel
     
     @validator('month')
@@ -67,7 +80,7 @@ async def root():
     return {"message": "Hello World"}
 
 @app.post("/get_event_category_frequency_for_month")
-async def get_event_category_frequency_for_month(req: GetEventsByMonth):
+async def get_event_category_frequency_for_month(req: GetEventsFrequencyByMonth):
     '''
     Given the month and year, return a mapping of:
     - dates in the month which has at least one event, to
@@ -82,15 +95,18 @@ async def get_event_category_frequency_for_month(req: GetEventsByMonth):
             }
             return res
 
-        events = db_operations.get_events_by_month(session,req.month,req.year)
+        events = db_operations.get_events_by_month(session,req.month,req.year, req.filter_by_sent_date)
         events_categories = db_operations.get_event_tags(session,events, convertName=True) #Make sure to get actual category names
-        #print("Event categories",events_categories)
         event_categories_by_date = {} # Hold the tags used in each day
         
         # Sort events in bins of the day they start on,
         # keeping track of all event categories that are used on that day
         for (event, event_categories) in zip(events, events_categories):
-            date = event.start_date.strftime("%Y-%m-%d")
+            if req.filter_by_sent_date:
+                date = event.date_created.strftime("%Y-%m-%d")
+                
+            else:
+                date = event.start_date.strftime("%Y-%m-%d")
             if date not in event_categories_by_date:
                 event_categories_by_date[date] = event_categories.copy() #Memory safety
             else:
@@ -103,7 +119,6 @@ async def get_event_category_frequency_for_month(req: GetEventsByMonth):
         return {
             'frequency': event_categories_freq_by_date
         }
-
 
 @app.post("/get_events_by_month")
 async def get_events_by_month(req: GetEventsByMonth):
@@ -118,7 +133,7 @@ async def get_events_by_month(req: GetEventsByMonth):
             }
             return res
 
-        events = db_operations.get_events_by_month(session,req.month,req.year)
+        events = db_operations.get_events_by_month(session,req.month,req.year, req.filter_by_sent_date)
         tags = db_operations.get_event_tags(session,events)
         users = db_operations.get_event_user_emails(session,events)
         return {

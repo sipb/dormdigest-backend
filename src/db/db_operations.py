@@ -1,5 +1,5 @@
 import sqlalchemy as db
-from sqlalchemy import exc
+from sqlalchemy import exc, cast, Date
 import sqlalchemy.orm
 from datetime import timedelta, datetime
 
@@ -114,7 +114,7 @@ def get_events_by_date(session, from_date, filter_by_sent_date):
         query = session.query(
             Event
         ).filter(
-            Event.date_created.date().between(from_date, from_date)
+            Event.date_created.between(from_date, from_date+timedelta(days=1))
         ).order_by(
             Event.date_created, Event.title
         )
@@ -130,7 +130,7 @@ def get_events_by_date(session, from_date, filter_by_sent_date):
     events = query.all()
     return events
 
-def get_events_by_month(session, month,year=None):
+def get_events_by_month(session, month,year=None, filter_by_sent_date=False):
     '''
     Get all events happening in a given month,
     ordered by start time and event name
@@ -146,13 +146,22 @@ def get_events_by_month(session, month,year=None):
 
     from_date = datetime(year,month,1).date()
     to_date = datetime(year,month,last_day_of_month).date()
-    query = session.query(
+    if (filter_by_sent_date):
+        query = session.query(
             Event
         ).filter(
-            Event.start_date.between(from_date, to_date)
+            Event.date_created.between(from_date, to_date+timedelta(days=1))
         ).order_by(
-            Event.start_date, Event.start_time, Event.title
+            Event.date_created, Event.title
         )
+    else:
+        query = session.query(
+                Event
+            ).filter(
+                Event.start_date.between(from_date, to_date)
+            ).order_by(
+                Event.start_date, Event.start_time, Event.title
+            )
     events = query.all()
     return events
 
