@@ -1,6 +1,8 @@
 import sys
-import datetime
+import os
+from zoneinfo import ZoneInfo
 sys.path.append('/home/sipb/dormdigest-backend/src') #Hardcoded
+os.chdir('/home/sipb/dormdigest-backend/src')
 
 import db.db_operations as db_operations
 
@@ -9,7 +11,9 @@ def fix_bad_email_sent_datetime():
         all_events = db_operations.get_all_events(session)
         for event in all_events:
             if event.date_created:
-                event.date_created += "Z"
+                print("Before",event.date_created)
+                event.date_created = event.date_created.replace(tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo('America/New_York'))
+                print("After",event.date_created)
         session.commit()
         session.flush()
 

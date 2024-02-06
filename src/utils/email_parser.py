@@ -1,6 +1,6 @@
 from typing import Any, Optional, Set, List, Tuple
 from dataclasses import dataclass
-
+from zoneinfo import ZoneInfo
 
 import sys
 import datetime
@@ -235,8 +235,10 @@ def eat(raw) -> Email:
     headers_not_found: list[str] = []
 
     # eat it one bite at a time
+    email_sent_date = email.date.replace(tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo('America/New_York')) #For consistency, we want all our timestamps be in EST
+    
     message_id: str               = nibble("Message-ID", email.message_id, headers_not_found)
-    sent:       datetime.datetime = nibble(      "Date", email.date+'Z',       headers_not_found) #Note: We add "Z" to indicate that it's UTC time
+    sent:       datetime.datetime = nibble(      "Date", email_sent_date,  headers_not_found)
     sender:     ContactsType      = nibble(      "From", email.from_,      headers_not_found)
     subject:    str               = nibble(   "Subject", email.subject,    headers_not_found)
     to:         ContactsType      = nibble(        "To", email.to)
