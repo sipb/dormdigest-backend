@@ -236,7 +236,7 @@ def eat(raw) -> Email:
 
     # eat it one bite at a time
     message_id: str               = nibble("Message-ID", email.message_id, headers_not_found)
-    sent:       datetime.datetime = nibble(      "Date", email.date,       headers_not_found)
+    sent:       datetime.datetime = nibble(      "Date", email.date+'Z',       headers_not_found) #Note: We add "Z" to indicate that it's UTC time
     sender:     ContactsType      = nibble(      "From", email.from_,      headers_not_found)
     subject:    str               = nibble(   "Subject", email.subject,    headers_not_found)
     to:         ContactsType      = nibble(        "To", email.to)
