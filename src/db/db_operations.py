@@ -12,12 +12,49 @@ from utils.category_parser import parse_tags
 import db.schema as schema
 import calendar
 from auth.auth_helpers import generate_API_token
+import configs.server_configs as config
 
-from redis import StrictRedis
+from redis import Redis
 from redis_cache import RedisCache
 
-client = StrictRedis(host="localhost", decode_responses=True)
+client = Redis(host="localhost", decode_responses=True)
 cache = RedisCache(redis_client=client)
+
+is_redis_alive = True
+try:
+    client.ping() 
+except:
+    is_redis_alive = False
+
+# We can also disable Redis caching in the config,
+# which would override the option here 
+# (regardless if Redis service is running or not)
+
+if not config.USE_REDIS_CACHING:
+    is_redis_alive = False #Act as if Redis is disabled
+
+def do_caching(ttl=0, limit=0):
+    '''
+    Function decorator
+    
+    If the Redis server is running, it fetches the cached function results. 
+    Otherwise, it just calls the function normally.
+    Also is overriden with server_configs.py's USE_REDIS_CACHING option.
+    
+    Note: For developers, you can add to the do_caching() arguments as needed.
+    We are simply using it to pass the arguments to the RedisCache.cache() function call
+    '''
+    def decorator(function):
+        def wrapper(*args, **kwargs):
+            if is_redis_alive:
+                #Using cached function
+                cached_function = cache.cache(ttl=ttl, limit=limit)(function)
+                return cached_function(*args, **kwargs)
+            else:
+                #Using normal function
+                return function(*args, **kwargs)
+        return wrapper
+    return decorator
 
 MAX_COMMIT_RETRIES = 10
 
@@ -85,7 +122,7 @@ def validate_session_id(session, email_addr, session_id):
     Todo:
         Check to make sure the session isn't super old (e.g. 7 days)
     """
-    @cache.cache(ttl=3600, limit=100)
+    @do_caching(ttl=3600, limit=100)
     def validate_session_id_helper(email_addr, session_id):
         session_id = session.query(SessionId).filter(
             SessionId.email_addr==email_addr,
@@ -172,7 +209,7 @@ def get_event_tags(session, events, convertName=False):
     
     If `convertToName` is True, tag number will be converted to the category name.
     '''
-    @cache.cache(limit=1024)
+    @do_caching(limit=1024)
     def get_event_tags_helper(event_ids, convertName):
         res = []
         for event in events:
@@ -209,7 +246,7 @@ def get_event_description(session, event_id, description_type):
     Requirements:
         - `description_type` is EventDescriptionType enum
     """
-    @cache.cache(limit=1024)
+    @do_caching(limit=1024)
     def get_event_description_helper(event_id, description_type_value):
         description_chunks = session.query(EventDescription).filter(
                 EventDescription.event_id == event_id,

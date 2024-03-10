@@ -4,7 +4,7 @@ from fastapi import (
     status, HTTPException,
 )
 
-#from fastapi_cache import FastAPICache
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 import uvicorn
@@ -19,6 +19,8 @@ from collections import Counter
 from utils.email_parser import eat, EmailMissingHeaders
 import configs.server_configs as config # type: ignore
 from configs.creds import valid_API_tokens
+
+import os 
 
 ## Request Models
 class NewAuthModel(BaseModel):
@@ -72,12 +74,16 @@ app.add_middleware(
     allow_credentials=True,
     allow_headers=["*"],
     allow_methods=["*"],
-    allow_origins=["http://localhost:3000","https://localhost:3000","https://dormdigest.xvm.mit.edu","https://dormdigest.mit.edu"]
+    allow_origins=list(config.ALLOWED_ORIGINS) #Shallow copy
 )
 
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
+
+# By default, we also have FastAPI serve static images 
+# This is largely for DEV environments (PROD + and TESTING should use Nginx instead)
+app.mount("/images", StaticFiles(directory=config.LOCAL_IMAGE_PATH), name="images")
 
 @app.post("/get_event_category_frequency_for_month")
 async def get_event_category_frequency_for_month(req: GetEventsFrequencyByMonth):
@@ -239,10 +245,19 @@ async def create_session(req: NewAuthModel):
         return res
 
 if __name__ == '__main__':
-    uvicorn.run("main:app",
-                host=config.SERVER_HOST,
-                port=config.SERVER_PORT,
-                reload=False, #More optimized for production
-                ssl_keyfile=config.SSL_KEY_FILE,
-                ssl_certfile=config.SSL_CRT_FILE
-                )
+    if config.CURRENT_MODE in [config.AVAILABLE_MODES.PROD, config.AVAILABLE_MODES.TESTING]:
+        uvicorn.run("main:app",
+                    host=config.SERVER_HOST,
+                    port=config.SERVER_PORT,
+                    reload=False, #More optimized for production
+                    ssl_keyfile=config.SSL_KEY_FILE,
+                    ssl_certfile=config.SSL_CRT_FILE
+                    )
+    else: #By default, config.AVAILABLE_MODES.DEV
+        uvicorn.run("main:app",
+            host=config.SERVER_HOST,
+            port=config.SERVER_PORT,
+            reload=True, #Allow dynamic reloads
+            #Note: We don't require SSL/HTTPS for dev environments
+            )
+        

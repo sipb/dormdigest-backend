@@ -26,8 +26,8 @@ Relevant permission bits
   * Then, in the future, when you come back, simply do:
     * `source env/bin/activate`
     * **Note:** If you are using Visual Studio for your code editor, normally it will automatically load in your virtual environment (if found in current working directory) when you run your code. This saves time from having to load and unload your venv each time.
-* Creating your local HTTPS certificates
-  * For security, we require that the FastAPI server runs with HTTPS enabled. For local development you'll need to create your own self-signed certificates, done through `mkcert` tool.
+* (OPTIONAL) Creating your local HTTPS certificates
+  * For security, we require that the FastAPI server runs with HTTPS enabled. You can create your own self-signed certificates through the `mkcert` tool.
   * On Linux/Windows:
     * Install `nss`, such as `sudo dnf install nss-tools`. `mkcert` will tell you how to install it if you skip this step.
     * Download `mkcert` from https://github.com/FiloSottile/mkcert/releases and put it in your PATH
@@ -39,7 +39,7 @@ Relevant permission bits
       * `mkcert localhost 127.0.0.1`
       * You should now have two files named something like `localhost+1.pem` and `localhost+1-key.pem`
     * Rename the file with `key` to `key.pem` and then rename the other file `cert.pem`.
-* Setting up local **Redis server**
+* (OPTIONAL) Setting up local **Redis server**
   * To improve the performance of our FastAPI server, we added support for function caching via redis
   * First, to install Redis:
     * On Linux:
@@ -60,7 +60,7 @@ Relevant permission bits
         * `brew services stop redis`
 * Finally, start the Python server:
   * **FOR DEVELOPMENT:**
-    * Edit `src/configs/server_configs.py` and set `CURRENT_MODE` to `dev` instead of `prod`
+    * Edit `src/configs/server_configs.py` and set `CURRENT_MODE` to `AVAILABLE_MODES.DEV` instead of `AVAILABLE_MODES.PROD`
     * Inside the `src/` folder, run `python3 main.py`
     * Now if you navigate to `https://localhost:8432/docs` you should see the server's interactive page
 
