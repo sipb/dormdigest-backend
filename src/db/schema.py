@@ -88,7 +88,7 @@ class Event(SQLBase):
     # Published and approved?
     approved_is = Column(Boolean, default=False)
 
-    date_created = Column(DateTime, default=datetime.datetime.now)
+    date_created = Column(DateTime, default=datetime.datetime.now) #Date the email was sent
     date_updated = Column(DateTime, default=datetime.datetime.now)
 
 
