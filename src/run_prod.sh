@@ -2,6 +2,8 @@ export CURRENT_MODE=PROD #Used to override operating mode in `src/configs/server
 gunicorn main:app \
     --workers 4 \
     --worker-class uvicorn.workers.UvicornWorker \
+    --certfile=/etc/letsencrypt/live/dormdigest.mit.edu/fullchain.pem \
+    --keyfile=/etc/letsencrypt/live/dormdigest.mit.edu/privkey.pem \
     --capture-output \
     --log-level debug \
     --error-logfile server_error_log.txt \
