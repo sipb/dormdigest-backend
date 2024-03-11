@@ -1,3 +1,4 @@
+import os
 from enum import Enum
 
 '''
@@ -13,7 +14,15 @@ class AVAILABLE_MODES(Enum):
     TESTING = "TESTING"
     DEV = "DEV"
 
-CURRENT_MODE = AVAILABLE_MODES.PROD
+CURRENT_MODE = AVAILABLE_MODES.DEV #By default, we have it set to local development.
+                                   #For production and testing environments, you
+                                   #should use `run_prod.sh` and `run_testing.sh`
+                                   #which will set an environment variable that
+                                   #overrides this config.
+
+override_mode = os.getenv('CURRENT_MODE') #Use environment variable to change mode
+if override_mode and override_mode in [e.value for e in AVAILABLE_MODES]:
+    CURRENT_MODE = AVAILABLE_MODES(override_mode)
 
 '''
 Breakdown of variable config options:
