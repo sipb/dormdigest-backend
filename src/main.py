@@ -245,19 +245,26 @@ async def create_session(req: NewAuthModel):
         return res
 
 if __name__ == '__main__':
-    if config.CURRENT_MODE in [config.AVAILABLE_MODES.PROD, config.AVAILABLE_MODES.TESTING]:
+    
+    #Note: You should only run main.py directly for development and 
+    #      for general testing (hence why reload=True).
+    #      Otherwise, always use `run_prod.sh` and `run_testing.sh`
+    #      when deploying to the production or testing server,
+    #      respectively.
+    
+    if config.USE_HTTPS:
         uvicorn.run("main:app",
                     host=config.SERVER_HOST,
                     port=config.SERVER_PORT,
-                    reload=False, #More optimized for production
+                    reload=True, #Allow dynamic reloads
                     ssl_keyfile=config.SSL_KEY_FILE,
                     ssl_certfile=config.SSL_CRT_FILE
                     )
-    else: #By default, config.AVAILABLE_MODES.DEV
+    else: 
         uvicorn.run("main:app",
             host=config.SERVER_HOST,
             port=config.SERVER_PORT,
             reload=True, #Allow dynamic reloads
-            #Note: We don't require SSL/HTTPS for dev environments
+            #Note: Don't require SSL/HTTPS => Use HTTP
             )
         

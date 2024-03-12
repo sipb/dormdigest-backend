@@ -45,25 +45,30 @@ Breakdown of variable config options:
 
 LOCAL_IMAGE_PATH = "./images/" #Path to where images should be stored locally after extraction
 SERVER_PORT = 8432
-SSL_KEY_FILE = "./configs/key.pem"  #replace with Let's Encrypt certs for production
-SSL_CRT_FILE = "./configs/cert.pem" #replace with Let's Encrypt certs for production
+
 
 if CURRENT_MODE == AVAILABLE_MODES.PROD:
     SERVER_HOST = "0.0.0.0"
     ALLOWED_ORIGINS = ["https://dormdigest.mit.edu"]
     USE_HTTPS = True
+    SSL_KEY_FILE = "/etc/letsencrypt/live/dormdigest.mit.edu/privkey.pem"
+    SSL_CRT_FILE = "/etc/letsencrypt/live/dormdigest.mit.edu/fullchain.pem" 
     USE_REDIS_CACHING = True
     BASE_IMAGE_URL = "https://dormdigest.mit.edu/images/"
 elif CURRENT_MODE == AVAILABLE_MODES.TESTING:
     SERVER_HOST = "0.0.0.0"
     ALLOWED_ORIGINS = ["https://dormdigest.xvm.mit.edu"]
     USE_HTTPS = True
+    SSL_KEY_FILE = "/etc/letsencrypt/live/dormdigest.xvm.mit.edu/privkey.pem"
+    SSL_CRT_FILE = "/etc/letsencrypt/live/dormdigest.xvm.mit.edu/fullchain.pem" 
     USE_REDIS_CACHING = True
     BASE_IMAGE_URL = "https://dormdigest.xvm.mit.edu/images/"
 else: #By default, AVAILABLE_MODES.DEV
     SERVER_HOST = "localhost"
     ALLOWED_ORIGINS = ["http://localhost:3000","https://localhost:3000"]
     USE_HTTPS = False
+    SSL_KEY_FILE = "./configs/key.pem"
+    SSL_CRT_FILE = "./configs/cert.pem"
     USE_REDIS_CACHING = False # By default, don't use caching even if Redis is available.
                               # This is to avoid situations where cache data becomes stale, 
                               # which is a common side-effect when you're modifying the database
