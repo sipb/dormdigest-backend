@@ -443,13 +443,13 @@ def add_event_description(session, event_id, description_plaintext, description_
     add_event_description_helper(EventDescriptionType.HTML, html_to_add)
     session.commit()
 
-def add_session_id(session, email_addr):
+def add_session_id(session, email_addr, token=None):
     """
     Add a new session id to the database for a user login.
 
     Note that the `session` arg is the database session, not to be confused
     """
-    token = generate_API_token(length=SESSION_ID_LENGTH)
+    if token is None: token = generate_API_token(length=SESSION_ID_LENGTH)
     new_session_id = SessionId(token, email_addr)
     committed = add_to_db(session, new_session_id)
     if committed:
