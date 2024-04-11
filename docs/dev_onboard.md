@@ -90,38 +90,23 @@ Relevant permission bits
     * `git pull`
   * Frontend:
     * **FOR TESTING SERVER:**
-      * Because XVM doesn't support node 18 properly, whenever you want to run a new build in production, you will need to build it locally with `npm run build` and then secure copy the build files onto the server. An example command is:
-      * `scp -r ~/Documents/SIPB/dormdigest-frontend/build/* root@dormdigest.xvm.mit.edu:/home/dorm/dormdigest-frontend/build/`
+      * Because XVM doesn't support node 18 properly, whenever you want to run a new build in production, you will need to build it locally with `npm run build` and then secure copy the build files onto the server. 
+      * First, you need to make sure that the main config files in `src/server_configs.ts` and `src/auth_backend/server_configs.ts` of your local copy is representative of the XVM instance (e.g. `CURRENT_MODE` equals `AVAILABLE_MODES.TESTING`)
+      * For secure copying, an example command is:
+        * **For frontend:** `scp -r ~/Documents/SIPB/dormdigest-frontend/build/* root@dormdigest.xvm.mit.edu:/home/dorm/dormdigest-frontend/build/`
+        * **For auth backend:** `scp -r ~/Documents/SIPB/dormdigest-frontend/auth_backend/build/* root@dormdigest.xvm.mit.edu:/home/dorm/dormdigest-frontend/auth_backend/build/`
     * **FOR PRODUCTION SERVER:**   
       * With the production server, you can just build the frontend files directly. Normally though we'll have modifications in certain config files that are specific to the production (e.g., specifying REACT_APP_BACKEND_URL and SSL cert files)
       * Because of this, you should do the following when pulling:
       * 1. `git add .`
-        2. `git stash`
-        3. `git pull`
-        4. `git stash pop`
-        5. `git reset`
-        6. `git status`
+        1. `git stash`
+        2. `git pull`
+        3. `git stash pop`
+        4. `git reset`
+        5. `git status`
       * `npm run build`
 7. Get dormdigest running again
-  * Backend:
-    * `run.sh`
-  * Frontend:
-    * N/A
-
-
-## Pushing/Pulling from Production Servers
-
-* Pulling emails from mail scripts
-  * In the initial stages, we're saving all emails that errored out at `mail_scripts/saved` on the dormdigest locker. To retrieve it, first log into Athena and cd into a local directory (one owned by you) folder. Then do:
-    * `rsync -av /mit/dormdigest/mail_scripts/saved/ ./saved/`
-  * To copy it back to your computer, do something like:
-    * `scp -r kerb@athena.dialup.mit.edu:~/dormdigest/mail_scripts/saved/ ./test_emails/`
-* Pushing frontend build to XVM
-  * Because XVM doesn't support node 18 properly, whenever you want to run a new build in production, you will need to build it locally with `npm run build` and then secure copy the build files onto the server. An example command is:
-  * For normal frontend build: `scp -r ~/Documents/SIPB/dormdigest-frontend/build/* root@dormdigest.xvm.mit.edu:/home/dorm/dormdigest-frontend/build/`
-  * For Express.js auth server build: `scp -r ~/Documents/SIPB/dormdigest-frontend/auth_backend/build/* root@dormdigest.xvm.mit.edu:/home/dorm/dormdigest-frontend/auth_backend/build/`
-* To run the frontend static files server, do: 
-  * `http-server -S -C /etc/letsencrypt/live/dormdigest.xvm.mit.edu/fullchain.pem -K /etc/letsencrypt/live/dormdigest.xvm.mit.edu/privkey.pem -p 443 ./build -- & > server_log.txt`
+  * See the [Deployment](#deployment) section for instructions on this
 
 ## Deployment
 
@@ -135,10 +120,20 @@ Relevant permission bits
       * Inside the `src/` folder, run `run_prod.sh`
 * To run the authentication server, do:
   * **FOR PRODUCTION SERVER**
+  * **NOTE:** As of April 10th, 2024, we've added the `--watch` flag so that the authentication server auto-restarts upon seein changes in the auth-backend files, so these steps aren't necessary for **production**. (However, you still need to do it for testing)
     * `cd ~/dormdigest-frontend/auth_backend`
     * `nvm use 18`
     * `npm install && npm run build`
-    * `pm2 start build/index.js --name auth --log auth_log.txt`
+    * `pm2 reload auth`
+      * For documentation sake, we originally started the service with:
+      * `pm2 start build/index.js --name auth --log auth_log.txt --watch`
+  * **FOR TESTING SERVER**
+  * **NOTE:** For some reason adding `--watch` to enable live updates on the XVM results in a restart loop, so each time you modify the auth backend build, you will also need to reload it on pm2.
+    * `nvm use 16`
+    * `pm2 status` (see status of jobs)
+    * `pm2 reload auth`
+      * For documentation sake, we originally started the service with:
+      * `pm2 start build/index.js --name auth --log auth_log.txt`
 
 ## Firewall
 
@@ -146,6 +141,16 @@ Relevant permission bits
   * To see which ports are open, do: `sudo ufw status`
   * To open a specific port, do: `sudo ufw allow [port_num]` 
     * This step is necessary when adding any new services to DormDigest that listens on a specific port
+s
+## Miscellaneous pushing / pulling from servers
+
+* Pulling emails from mail scripts
+  * In the initial stages, we're saving all emails that errored out at `mail_scripts/saved` on the dormdigest locker. To retrieve it, first log into Athena and cd into a local directory (one owned by you) folder. Then do:
+    * `rsync -av /mit/dormdigest/mail_scripts/saved/ ./saved/`
+  * To copy it back to your computer, do something like:
+    * `scp -r kerb@athena.dialup.mit.edu:~/dormdigest/mail_scripts/saved/ ./test_emails/`
+* To run the frontend static files server, do: 
+  * `http-server -S -C /etc/letsencrypt/live/dormdigest.xvm.mit.edu/fullchain.pem -K /etc/letsencrypt/live/dormdigest.xvm.mit.edu/privkey.pem -p 443 ./build -- & > server_log.txt`
 
 ## Deprecated Stuff
 
