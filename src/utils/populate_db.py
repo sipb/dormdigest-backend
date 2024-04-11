@@ -8,8 +8,30 @@ database with random emails plus-or-minus one month or so.
 To use this script, cd into `src` and run:
 
 ```bash
+# see help leaflet for more details
 python3 utils/populate_db.py
+
+# add session ID for tbeaver, and add 10 random emails
+python3 utils/populate_db.py "tbeaver@mit.edu" -e 10 -s
 ```
+
+Example output:
+
+```
+Generating Email #0/10...
+Generating Email #1/10...
+Generating Email #2/10...
+Generating Email #3/10...
+Generating Email #4/10...
+Generating Email #5/10...
+Generating Email #6/10...
+Generating Email #7/10...
+Generating Email #8/10...
+Generating Email #9/10...
+Added this session ID for tbeaver@mit.edu: '8bb763d6d3785a2ae205901be1b44a8e'
+Done.
+```
+
 """
 
 from pathlib import Path
@@ -17,6 +39,7 @@ import sys; sys.path.append(str(Path(sys.path[0]).parent))
 import random
 import datetime
 from datetime import timedelta
+import argparse
 
 import db.db_operations as db_operations
 from utils.email_parser import Email, Contact, EmailAddress
@@ -24,7 +47,6 @@ from utils.category_parser import CATEGORIES
 
 CATEGORIES = CATEGORIES[1:]
 
-NUM_EMAILS = 200  # THIS MANY EMAILS TO ADD
 LOWER_OFFSET = timedelta(days=-90)
 UPPER_OFFSET = timedelta(days=60)
 
@@ -39,6 +61,7 @@ def random_email(
    upper_offset: timedelta=timedelta(),
    event_offset: timedelta=timedelta(days=7),
    subject: str="Subject line",
+   sender: Contact=CONTACT,
 ) -> Email:
    # generate email body
    words = list(WORDS)
@@ -71,7 +94,7 @@ def random_email(
 
    email = Email(
       sent=sent,
-      sender=CONTACT,
+      sender=sender,
       subject=subject,
       thread_topic=subject,
       content=content,
@@ -80,21 +103,26 @@ def random_email(
    )
    return email
 
-def main():
+def add_events(num_events: int=200, sender: Contact=CONTACT):
    today = datetime.datetime.now()
    mid = (LOWER_OFFSET + UPPER_OFFSET) / 2
-   delta_t = (UPPER_OFFSET - mid) / NUM_EMAILS
+   delta_t = (UPPER_OFFSET - mid) / num_events
    lower_offset = LOWER_OFFSET
    upper_offset = mid
 
    with db_operations.session_scope() as session:
-      user_id = db_operations.add_user(session, str(CONTACT.email))
-      for i in range(NUM_EMAILS):
-         subject = f"Email #{i}/{NUM_EMAILS}"
+      for i in range(num_events):
+         subject = f"Email #{i}/{num_events}"
          print(f"Generating {subject}...")
          lower_offset += delta_t
          upper_offset += delta_t
-         email = random_email(today, lower_offset, upper_offset, subject=subject)
+
+         this_sender = sender if random.randint(0, 1) else CONTACT
+         user_id = db_operations.add_user(session, str(this_sender.email))
+
+         email = random_email(today,
+            lower_offset, upper_offset, subject=subject,
+            sender=this_sender)
 
          when = email.when
          event_id = db_operations.add_event(
@@ -110,8 +138,49 @@ def main():
             date_created=email.sent,
          )
 
+def add_session_id(email: str, session_id: str):
+   with db_operations.session_scope() as session:
+      token = session_id if session_id != "" else None
+      token = str(db_operations.add_session_id(session, email, token))
+      print(f"Added this session ID for {email}: {token!r}")
+
+def main():
+   parser = argparse.ArgumentParser(
+      prog="populate_db.py",
+      description="Quickly populate your local DormDigest database.",
+   )
+   parser.add_argument("email", type=str, metavar="EMAIL")
+   parser.add_argument("-e", "--events", type=int, metavar="NUM_EVENTS",
+      help=(
+         "Add this many events to the database.  Half of the added events "
+         "will use the provided email as the author, with the other half "
+         "using 'Tim Beaver' as the author."
+      ),
+   )
+   parser.add_argument("-s", "--session-id", type=str, nargs="?", const="",
+      help=(
+         "Add a session ID to the email in the database.  If no session ID is "
+         "specified, a random one is generated.  In any case, the script will "
+         "always inform you of the token that was added before exiting."
+      ),
+   )
+   args = parser.parse_args()
+   #print(args)
+
+   actions = 0
+   if isinstance(args.events, int) and args.events > 0:
+      add_events(args.events, Contact(args.email, "User"))
+      actions += 1
+   if isinstance(args.session_id, str):
+      add_session_id(args.email, args.session_id)
+      actions += 1
+
+   if not actions: print("Nothing to do...")
+   print("Done.")
+
 if __name__ == "__main__":
    main()
+   
 
 
 
